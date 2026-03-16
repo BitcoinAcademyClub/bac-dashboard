@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAC Dashboard · Bitcoin On-Chain</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --o:#F7931A;--bg:#050505;--c1:#0C0C0C;--c2:#111;
+  --bd:#1E1E1E;--t:#E8E8E8;--m:#555;--m2:#888;
+  --gn:#22C55E;--rd:#EF4444;--yl:#EAB308;--bl:#3B82F6;--pu:#A855F7;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--t);font-family:system-ui,-apple-system,sans-serif;font-size:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.fade{animation:fadeIn .4s ease both}
+
+.wrap{max-width:960px;margin:0 auto;padding:14px 12px 60px}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--c1);border:1px solid var(--bd);border-radius:14px;padding:14px 20px;margin-bottom:12px}
+.logo{font-size:18px;font-weight:900;color:var(--o);letter-spacing:-.5px}
+.logo-sub{font-size:10px;color:var(--m);margin-top:2px}
+.live-row{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gn);font-weight:700}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gn);animation:pulse 2s ease-in-out infinite}
+.ts{font-size:10px;color:var(--m);margin-top:3px;text-align:right}
+.btn-r{background:transparent;border:1px solid var(--bd);border-radius:7px;padding:5px 13px;font-size:11px;color:var(--m);cursor:pointer;font-family:inherit;margin-top:5px;transition:all .15s}
+.btn-r:hover{border-color:var(--o);color:var(--o)}
+.btn-r:disabled{opacity:.4;cursor:not-allowed}
+
+/* STATUS */
+.sbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sc{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;border:1px solid transparent;display:flex;align-items:center;gap:4px;transition:all .2s}
+.sc-ok{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2);color:var(--gn)}
+.sc-err{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:var(--rd)}
+.sc-load{background:rgba(102,102,102,.1);border-color:var(--bd);color:var(--m)}
+
+/* HERO */
+.hero{background:var(--c1);border:1px solid var(--bd);border-radius:14px;padding:20px 22px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.price-big{font-size:46px;font-weight:900;color:var(--o);font-family:'Courier New',monospace;letter-spacing:-1.5px;line-height:1}
+.chg-col{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.pill{font-size:12px;font-weight:700;padding:3px 11px;border-radius:20px}
+.up{background:rgba(34,197,94,.13);color:var(--gn)}
+.dn{background:rgba(239,68,68,.13);color:var(--rd)}
+.ne{background:rgba(102,102,102,.13);color:var(--m)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px}
+@media(max-width:680px){
+  .g4,.g5{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .hero{grid-template-columns:1fr}
+  .chg-col{flex-direction:row;flex-wrap:wrap}
+  .price-big{font-size:30px}
+}
+
+/* CARDS */
+.card{background:var(--c1);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+.lbl{font-size:10px;color:var(--m);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.val{font-size:22px;font-weight:900;font-family:'Courier New',monospace}
+.sub{font-size:11px;color:var(--m);margin-top:4px}
+.pbar{height:5px;background:#141414;border-radius:5px;overflow:hidden;margin-top:7px}
+.pbar-fill{height:100%;border-radius:5px;transition:width .9s ease}
+.halv{background:linear-gradient(135deg,rgba(247,147,26,.08),rgba(247,147,26,.02));border:1px solid rgba(247,147,26,.22);border-radius:12px;padding:14px 16px}
+
+/* SECTION */
+.sec{font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
+
+/* FEES */
+.fee-grid{display:grid;grid-template-columns:1fr 1fr 1fr}
+.fee-item{text-align:center;padding:12px 6px}
+.fee-item:not(:last-child){border-right:1px solid var(--bd)}
+.fee-big{font-size:30px;font-weight:900;font-family:'Courier New',monospace;line-height:1}
+.fee-sub{font-size:10px;color:var(--m);margin-top:5px}
+.div{height:1px;background:var(--bd);margin:12px 0}
+
+/* INDICATOR ROWS */
+.ind-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #141414}
+.ind-row:last-child{border-bottom:none}
+.ind-name{font-size:12px;font-weight:700}
+.zone{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;margin-top:3px;display:inline-block}
+.z-r{background:rgba(239,68,68,.12);color:var(--rd)}
+.z-y{background:rgba(234,179,8,.12);color:var(--yl)}
+.z-o{background:rgba(247,147,26,.12);color:var(--o)}
+.z-g{background:rgba(34,197,94,.12);color:var(--gn)}
+.z-n{background:rgba(102,102,102,.12);color:var(--m)}
+.z-p{background:rgba(168,85,247,.12);color:var(--pu)}
+
+/* CBBI GAUGE */
+.cbbi-circle{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid var(--bd);flex-shrink:0;transition:border-color .6s}
+.cbbi-num{font-size:28px;font-weight:900;font-family:monospace}
+.cbbi-lbl{font-size:9px;color:var(--m);margin-top:1px}
+
+/* SOURCES SECTION */
+.src-section{margin-bottom:14px}
+.src-cat-title{font-size:11px;font-weight:700;color:var(--o);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(247,147,26,.15);display:flex;align-items:center;gap:6px}
+.src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.src-link{display:flex;align-items:center;gap:7px;padding:7px 10px;background:#080808;border:1px solid var(--bd);border-radius:8px;text-decoration:none;transition:all .15s;cursor:pointer}
+.src-link:hover{border-color:var(--o);background:rgba(247,147,26,.05)}
+.src-link-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.src-link-body{}
+.src-link-name{font-size:11px;font-weight:600;color:var(--t)}
+.src-link-desc{font-size:9px;color:var(--m);margin-top:1px}
+.src-badge{font-size:9px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:auto;flex-shrink:0}
+.badge-free{background:rgba(34,197,94,.1);color:var(--gn);border:1px solid rgba(34,197,94,.15)}
+.badge-pro{background:rgba(234,179,8,.1);color:var(--yl);border:1px solid rgba(234,179,8,.15)}
+.badge-live{background:rgba(247,147,26,.1);color:var(--o);border:1px solid rgba(247,147,26,.15)}
+
+.notice{background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--m);line-height:1.7;margin-bottom:10px}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:transparent;color:var(--m);font-family:inherit;transition:all .15s}
+.tab.active{background:var(--o);color:#000;border-color:var(--o)}
+.tab:hover:not(.active){border-color:var(--m2);color:var(--t)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr fade">
+    <div>
+      <div class="logo">₿ BAC On-Chain Dashboard</div>
+      <div class="logo-sub">Bitcoin Academy Club · Análise On-Chain em Tempo Real</div>
+    </div>
+    <div style="text-align:right">
+      <div class="live-row"><span class="dot"></span>LIVE</div>
+      <div class="ts" id="ts">—</div>
+      <button class="btn-r" id="btnR" onclick="init()">↻ Atualizar</button>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="sbar" id="sbar">
+    <div class="sc sc-load" id="sc-price"><span class="spin">⏳</span> Preço BTC</div>
+    <div class="sc sc-load" id="sc-fg"><span class="spin">⏳</span> Fear &amp; Greed</div>
+    <div class="sc sc-load" id="sc-cbbi"><span class="spin">⏳</span> CBBI</div>
+    <div class="sc sc-load" id="sc-fees"><span class="spin">⏳</span> Mempool &amp; Fees</div>
+    <div class="sc sc-load" id="sc-hr"><span class="spin">⏳</span> Hashrate</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('mercado',this)">📊 Mercado</button>
+    <button class="tab" onclick="showTab('onchain',this)">🔍 On-Chain</button>
+    <button class="tab" onclick="showTab('rede',this)">⚡ Rede &amp; Mempool</button>
+    <button class="tab" onclick="showTab('macro',this)">🌍 Macro</button>
+    <button class="tab" onclick="showTab('fontes',this)">🔗 Fontes BAC</button>
+  </div>
+
+  <!-- TAB: MERCADO -->
+  <div class="tab-panel active" id="tab-mercado">
+
+    <div class="hero fade">
+      <div>
+        <div class="lbl">Bitcoin · BTC / EUR</div>
+        <div class="price-big" id="pEur" style="font-size:24px;color:var(--m)">A carregar...</div>
+        <div style="font-size:12px;color:var(--m);margin-top:6px" id="pUsd">&nbsp;</div>
+      </div>
+      <div class="chg-col" id="pChg"></div>
+    </div>
+
+    <div class="g4">
+      <div class="card"><div class="lbl">Market Cap</div><div class="val" id="mktCap">—</div><div class="sub">USD</div></div>
+      <div class="card"><div class="lbl">Volume 24h</div><div class="val" id="vol24">—</div><div class="sub">USD</div></div>
+      <div class="card"><div class="lbl">Var. 7 dias</div><div class="val" id="c7d">—</div><div class="sub" id="c7dS">—</div></div>
+      <div class="card"><div class="lbl">Var. 30 dias</div><div class="val" id="c30d">—</div><div class="sub" id="c30dS">—</div></div>
+    </div>
+
+    <div class="g2">
+      <!-- FEAR & GREED -->
+      <div class="card">
+        <div class="lbl">Fear &amp; Greed Index · alternative.me</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
+          <div>
+            <div style="font-size:40px;font-weight:900;font-family:monospace" id="fgNum">—</div>
+            <div class="sub" id="fgLbl">A carregar...</div>
+          </div>
+          <div style="flex:1">
+            <div class="pbar" style="height:8px"><div class="pbar-fill" id="fgBar" style="width:0%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--m);margin-top:3px"><span>0 Medo</span><span>100 Ganância</span></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--m);margin-top:10px;line-height:1.6" id="fgTip">—</div>
+      </div>
+
+      <!-- CBBI -->
+      <div class="card">
+        <div class="lbl">CBBI Index · colintalkscrypto.com</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:6px">
+          <div class="cbbi-circle" id="cbbiCircle">
+            <div class="cbbi-num" id="cbbiNum">—</div>
+            <div class="cbbi-lbl">CBBI</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700" id="cbbiLabel">A carregar...</div>
+            <div style="font-size:11px;color:var(--m);margin-top:5px;line-height:1.6" id="cbbiTip">O CBBI combina 9 indicadores para determinar o estado do ciclo Bitcoin.</div>
+            <div style="margin-top:8px">
+              <div class="pbar" style="height:8px"><div class="pbar-fill" id="cbbiBar" style="width:0%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--m);margin-top:3px"><span>0 Fundo</span><span>100 Topo</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HALVING -->
+    <div class="halv">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:center">
+        <div>
+          <div class="lbl" style="color:var(--o)">⛏ Próximo Halving</div>
+          <div style="font-size:30px;font-weight:900;color:var(--o);font-family:monospace" id="halvDays">—</div>
+          <div class="sub" style="margin-top:4px">Bloco #1.050.000 · Est. Abril 2028</div>
+        </div>
+        <div>
+          <div class="lbl">Progresso do Ciclo</div>
+          <div style="font-size:22px;font-weight:900;color:var(--o);font-family:monospace" id="halvPct">—</div>
+          <div class="pbar" style="margin-top:8px"><div class="pbar-fill" id="halvBar" style="width:0%;background:var(--o)"></div></div>
+          <div style="font-size:10px;color:var(--m);margin-top:4px">Ciclo 2024 → 2028</div>
+        </div>
+        <div>
+          <div class="lbl">Recompensa Atual</div>
+          <div style="font-size:22px;font-weight:900;color:var(--o);font-family:monospace">3.125</div>
+          <div class="sub">BTC por bloco</div>
+          <div style="font-size:10px;color:var(--m);margin-top:4px">Próximo: 1.5625 BTC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ON-CHAIN -->
+  <div class="tab-panel" id="tab-onchain">
+    <div class="g2">
+      <div class="card">
+        <div class="lbl">Avaliação de Ciclo</div>
+        <div class="ind-row">
+          <div><div class="ind-name">MVRV Z-Score</div><div style="font-size:10px;color:var(--m)">Market Value vs Realized Value</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vMvrv">—</div><div class="zone z-n" id="zMvrv">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Puell Multiple</div><div style="font-size:10px;color:var(--m)">Receita miners vs média 365d</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vPuell">—</div><div class="zone z-n" id="zPuell">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">NUPL</div><div style="font-size:10px;color:var(--m)">Net Unrealized Profit / Loss</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vNupl">—</div><div class="zone z-n" id="zNupl">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">RHODL Ratio</div><div style="font-size:10px;color:var(--m)">HODLers recentes vs longo prazo</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vRhodl">—</div><div class="zone z-n" id="zRhodl">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Reserve Risk</div><div style="font-size:10px;color:var(--m)">Risco vs recompensa de HODL</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vRr">—</div><div class="zone z-n" id="zRr">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl">Atividade On-Chain</div>
+        <div class="ind-row">
+          <div><div class="ind-name">SOPR</div><div style="font-size:10px;color:var(--m)">Spent Output Profit Ratio</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vSopr">—</div><div class="zone z-n" id="zSopr">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Realized Price</div><div style="font-size:10px;color:var(--m)">Custo médio de aquisição on-chain</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vReal">—</div><div class="zone z-n" id="zReal">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">STH Realized Price</div><div style="font-size:10px;color:var(--m)">Custo médio short-term holders</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vSth">—</div><div class="zone z-n" id="zSth">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">2Y MA Multiplier</div><div style="font-size:10px;color:var(--m)">Preço vs média móvel 2 anos</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="v2yma">—</div><div class="zone z-n" id="z2yma">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Pi Cycle Top</div><div style="font-size:10px;color:var(--m)">Indicador de topo de ciclo</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:800;font-family:monospace" id="vPi">—</div><div class="zone z-n" id="zPi">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice">
+      ⚠ Indicadores como MVRV, Puell, NUPL, SOPR e Reserve Risk requerem API Glassnode para dados automáticos em tempo real.
+      Os valores de referência acima são contextuais — actualiza-os semanalmente nos teus briefings BAC com os dados do <strong>Bitcoin Magazine Pro</strong> e <strong>LookIntoBitcoin</strong> (gratuitos visualmente).
+    </div>
+
+    <!-- CBBI Components -->
+    <div class="sec">📐 Componentes do CBBI Index</div>
+    <div class="g5" id="cbbiComponents">
+      <div class="card" style="padding:10px 12px"><div class="lbl">Pi Cycle Top</div><div style="font-size:16px;font-weight:800;font-family:monospace" id="cbbi-pi">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="lbl">RHODL Ratio</div><div style="font-size:16px;font-weight:800;font-family:monospace" id="cbbi-rhodl">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="lbl">Realized Profit</div><div style="font-size:16px;font-weight:800;font-family:monospace" id="cbbi-rp">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="lbl">Puell Multiple</div><div style="font-size:16px;font-weight:800;font-family:monospace" id="cbbi-puell">—</div></div>
+      <div class="card" style="padding:10px 12px"><div class="lbl">Reserve Risk</div><div style="font-size:16px;font-weight:800;font-family:monospace" id="cbbi-rr">—</div></div>
+    </div>
+  </div>
+
+  <!-- TAB: REDE & MEMPOOL -->
+  <div class="tab-panel" id="tab-rede">
+    <div class="sec" style="margin-top:0">⚡ Fees em Tempo Real · mempool.space</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="fee-grid">
+        <div class="fee-item">
+          <div style="font-size:10px;color:var(--rd);font-weight:700;margin-bottom:8px">🔴 URGENTE · 1 bloco</div>
+          <div class="fee-big" id="feeH" style="color:var(--rd)">—</div>
+          <div class="fee-sub">sat / vByte</div>
+          <div class="fee-sub" style="margin-top:3px;font-size:9px" id="feeHeur">~10 min</div>
+        </div>
+        <div class="fee-item">
+          <div style="font-size:10px;color:var(--o);font-weight:700;margin-bottom:8px">🟠 RÁPIDO · ~3 blocos</div>
+          <div class="fee-big" id="feeM" style="color:var(--o)">—</div>
+          <div class="fee-sub">sat / vByte</div>
+          <div class="fee-sub" style="margin-top:3px;font-size:9px">~30 min</div>
+        </div>
+        <div class="fee-item">
+          <div style="font-size:10px;color:var(--gn);font-weight:700;margin-bottom:8px">🟢 ECONÓMICO · 6+ blocos</div>
+          <div class="fee-big" id="feeL" style="color:var(--gn)">—</div>
+          <div class="fee-sub">sat / vByte</div>
+          <div class="fee-sub" style="margin-top:3px;font-size:9px">~1 hora+</div>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div class="g4" style="margin-bottom:0">
+        <div><div class="lbl">Txs no Mempool</div><div style="font-size:20px;font-weight:900;font-family:monospace" id="mTxs">—</div></div>
+        <div><div class="lbl">Hashrate</div><div style="font-size:20px;font-weight:900;font-family:monospace" id="hrate">—</div></div>
+        <div><div class="lbl">Próx. Ajuste Dif.</div><div style="font-size:20px;font-weight:900;font-family:monospace" id="diffAdj">—</div><div class="sub" id="diffBlocks">—</div></div>
+        <div><div class="lbl">Último Bloco</div><div style="font-size:20px;font-weight:900;font-family:monospace" id="lastBlock">—</div><div class="sub" id="lastBlockTime">—</div></div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="lbl">Hash Ribbons · bgeometrics.com</div>
+        <div style="font-size:12px;color:var(--m);line-height:1.7;margin-top:6px">
+          Os Hash Ribbons identificam capitulação de miners e oportunidades de compra quando a média de 30 dias do hashrate cruza acima da de 60 dias.
+        </div>
+        <div style="margin-top:10px">
+          <div class="ind-row">
+            <div><div class="ind-name">Hashrate 30D MA</div></div>
+            <div style="font-size:13px;font-weight:700;font-family:monospace" id="hr30">—</div>
+          </div>
+          <div class="ind-row" style="border:none">
+            <div><div class="ind-name">Hashrate 60D MA</div></div>
+            <div style="font-size:13px;font-weight:700;font-family:monospace" id="hr60">—</div>
+          </div>
+        </div>
+        <a href="https://charts.bgeometrics.com/graphics/hashribbons.html" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--o);text-decoration:none">→ Ver gráfico Hash Ribbons</a>
+      </div>
+      <div class="card">
+        <div class="lbl">Receita dos Miners</div>
+        <div class="ind-row">
+          <div><div class="ind-name">Receita Total</div><div style="font-size:10px;color:var(--m)">Block rewards + fees</div></div>
+          <div style="text-align:right"><div style="font-size:13px;font-weight:700;font-family:monospace" id="minerRev">—</div></div>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Subsídio por Bloco</div><div style="font-size:10px;color:var(--m)">Emissão nova</div></div>
+          <div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--o);font-family:monospace">3.125 BTC</div></div>
+        </div>
+        <div class="ind-row" style="border:none">
+          <div><div class="ind-name">Dificuldade Atual</div></div>
+          <div style="text-align:right"><div style="font-size:13px;font-weight:700;font-family:monospace" id="diffVal">—</div></div>
+        </div>
+        <a href="https://www.bitcoinmagazinepro.com/charts/bitcoin-miner-revenue-total/" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--o);text-decoration:none">→ Ver receita miners (BTC Mag Pro)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: MACRO -->
+  <div class="tab-panel" id="tab-macro">
+    <div class="g2">
+      <div class="card">
+        <div class="lbl">Liquidez Global M2 · bgeometrics.com</div>
+        <div style="font-size:12px;color:var(--m);line-height:1.7;margin-top:6px">
+          A correlação entre M2 global e o preço do Bitcoin é um dos indicadores macro mais seguidos.
+          Expansão de M2 precede historicamente bull runs em ~3 meses.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <a href="https://charts.bgeometrics.com/graphics/m2_global.html" target="_blank" class="btn-r">M2 Global</a>
+          <a href="https://charts.bgeometrics.com/graphics/m2_global_10w.html" target="_blank" class="btn-r">M2 +10 Semanas</a>
+          <a href="https://charts.bgeometrics.com/graphics/m2_btc.html" target="_blank" class="btn-r">M2 vs BTC</a>
+          <a href="https://charts.bgeometrics.com/graphics/fedfunds.html" target="_blank" class="btn-r">Fed Funds Rate</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl">Dados Macro Fed · FRED &amp; CME</div>
+        <div class="ind-row">
+          <div><div class="ind-name">FRED Economic Data</div><div style="font-size:10px;color:var(--m)">Base de dados da Reserva Federal</div></div>
+          <a href="https://fred.stlouisfed.org" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Aceder</a>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">CME FedWatch Tool</div><div style="font-size:10px;color:var(--m)">Probabilidade de corte de taxas</div></div>
+          <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Aceder</a>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">Calendário Macro</div><div style="font-size:10px;color:var(--m)">CPI, NFP, FOMC, GDP</div></div>
+          <a href="https://www.investing.com/economic-calendar" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Aceder</a>
+        </div>
+        <div class="ind-row" style="border:none">
+          <div><div class="ind-name">Polymarket</div><div style="font-size:10px;color:var(--m)">Previsões de mercado sobre BTC</div></div>
+          <a href="https://polymarket.com" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Aceder</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="lbl">ETF Bitcoin · bgeometrics.com</div>
+        <div style="font-size:12px;color:var(--m);line-height:1.7;margin-top:6px">
+          Fluxos dos ETFs Spot Bitcoin são um indicador macro crítico — entradas liquidas indicam procura institucional crescente.
+        </div>
+        <a href="https://charts.bgeometrics.com/graphics/etf.html" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--o);text-decoration:none;border:1px solid rgba(247,147,26,.2);padding:5px 12px;border-radius:7px">→ Ver fluxos ETF em tempo real</a>
+      </div>
+      <div class="card">
+        <div class="lbl">Google Trends &amp; Sentimento</div>
+        <div class="ind-row">
+          <div><div class="ind-name">Google Trends</div><div style="font-size:10px;color:var(--m)">Interesse de pesquisa "Bitcoin"</div></div>
+          <a href="https://charts.bgeometrics.com/graphics/google_trends.html" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Ver</a>
+        </div>
+        <div class="ind-row">
+          <div><div class="ind-name">RWA.xyz</div><div style="font-size:10px;color:var(--m)">Real World Assets tokenizados</div></div>
+          <a href="https://rwa.xyz" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Aceder</a>
+        </div>
+        <div class="ind-row" style="border:none">
+          <div><div class="ind-name">Rainbow Chart</div><div style="font-size:10px;color:var(--m)">Modelo de valorização histórica</div></div>
+          <a href="https://www.blockchaincenter.net/bitcoin-rainbow-chart/" target="_blank" style="font-size:10px;color:var(--o);text-decoration:none">→ Ver</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: FONTES BAC -->
+  <div class="tab-panel" id="tab-fontes">
+
+    <!-- ÍNDICES DE CICLO -->
+    <div class="src-section">
+      <div class="src-cat-title">🎯 Índices de Ciclo &amp; Modelos de Preço</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://colintalkscrypto.com/cbbi/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">📐</div>
+          <div class="src-link-body"><div class="src-link-name">CBBI Index</div><div class="src-link-desc">9 indicadores de ciclo combinados</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.blockchaincenter.net/bitcoin-rainbow-chart/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">🌈</div>
+          <div class="src-link-body"><div class="src-link-name">Rainbow Chart</div><div class="src-link-desc">Modelo histórico de valorização</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://woocharts.com/bitcoin-price-models/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">📈</div>
+          <div class="src-link-body"><div class="src-link-name">Woo Charts</div><div class="src-link-desc">Modelos de preço Bitcoin</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/power_law.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">⚡</div>
+          <div class="src-link-body"><div class="src-link-name">Power Law</div><div class="src-link-desc">Modelo power law — BGeometrics</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/terminal_price.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">🎯</div>
+          <div class="src-link-body"><div class="src-link-name">Terminal Price</div><div class="src-link-desc">Preço terminal do ciclo</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ON-CHAIN INDICATORS -->
+    <div class="src-section">
+      <div class="src-cat-title">🔍 Indicadores On-Chain Principais</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">📊</div>
+          <div class="src-link-body"><div class="src-link-name">MVRV Z-Score</div><div class="src-link-desc">Market vs Realized Value</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/puell-multiple/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">⛏</div>
+          <div class="src-link-body"><div class="src-link-name">Puell Multiple</div><div class="src-link-desc">Receita miners vs média 365d</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/sopr-spent-output-profit-ratio/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">💰</div>
+          <div class="src-link-body"><div class="src-link-name">SOPR</div><div class="src-link-desc">Spent Output Profit Ratio</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/reserve-risk/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(239,68,68,.1);color:var(--rd)">⚠</div>
+          <div class="src-link-body"><div class="src-link-name">Reserve Risk</div><div class="src-link-desc">Risco vs recompensa HODL</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/realized-price/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">💎</div>
+          <div class="src-link-body"><div class="src-link-name">Realized Price</div><div class="src-link-desc">Custo médio on-chain</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/short-term-holder-realized-price/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.1);color:var(--yl)">📍</div>
+          <div class="src-link-body"><div class="src-link-name">STH Realized Price</div><div class="src-link-desc">Short-term holders</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://coinank.com/indexdata/rhodlRatio" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">📉</div>
+          <div class="src-link-body"><div class="src-link-name">RHODL Ratio</div><div class="src-link-desc">HODLers recentes vs longo prazo</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://coinank.com/indexdata/piCycleTop" target="_blank">
+          <div class="src-link-icon" style="background:rgba(239,68,68,.1);color:var(--rd)">🔺</div>
+          <div class="src-link-body"><div class="src-link-name">Pi Cycle Top</div><div class="src-link-desc">Indicador de topo de ciclo</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://coinank.com/indexdata/year2MA" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">📅</div>
+          <div class="src-link-body"><div class="src-link-name">2Y MA Multiplier</div><div class="src-link-desc">Preço vs média móvel 2 anos</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/cdd.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">📆</div>
+          <div class="src-link-body"><div class="src-link-name">CDD (BGeometrics)</div><div class="src-link-desc">Coin Days Destroyed</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- HODL & ENDEREÇOS -->
+    <div class="src-section">
+      <div class="src-cat-title">💎 HODL Waves &amp; Distribuição de Endereços</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/hodl-waves/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">🌊</div>
+          <div class="src-link-body"><div class="src-link-name">HODL Waves</div><div class="src-link-desc">Distribuição por tempo de posse</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/realized-cap-hodl-waves/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">💹</div>
+          <div class="src-link-body"><div class="src-link-name">Realized Cap HODL Waves</div><div class="src-link-desc">Cap realizado por grupo</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/whale-shadows/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">🐋</div>
+          <div class="src-link-body"><div class="src-link-name">Whale Shadows</div><div class="src-link-desc">Movimentos de grandes endereços</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/addresses-non-zero-balance/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">🏠</div>
+          <div class="src-link-body"><div class="src-link-name">Endereços Ativos</div><div class="src-link-desc">Endereços com saldo &gt; 0</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/percent-addresses-in-profit/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">✅</div>
+          <div class="src-link-body"><div class="src-link-name">% Endereços em Lucro</div><div class="src-link-desc">Percentagem de HODLers no verde</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- MINERS -->
+    <div class="src-section">
+      <div class="src-cat-title">⛏ Mineradores &amp; Hashrate</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/bitcoin-hashrate-chart/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(239,68,68,.1);color:var(--rd)">🔥</div>
+          <div class="src-link-body"><div class="src-link-name">Hashrate</div><div class="src-link-desc">Segurança da rede Bitcoin</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/hash-ribbons/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">🎀</div>
+          <div class="src-link-body"><div class="src-link-name">Hash Ribbons</div><div class="src-link-desc">Capitulação e recuperação miners</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/hashrate.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">📡</div>
+          <div class="src-link-body"><div class="src-link-name">Hashrate (BGeometrics)</div><div class="src-link-desc">Gráfico interativo hashrate</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/hashprice.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.1);color:var(--yl)">💲</div>
+          <div class="src-link-body"><div class="src-link-name">Hash Price</div><div class="src-link-desc">Receita por TH/s dos miners</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/puell-multiple.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">📐</div>
+          <div class="src-link-body"><div class="src-link-name">Puell (BGeometrics)</div><div class="src-link-desc">Versão interativa Puell Multiple</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- DERIVATIVOS -->
+    <div class="src-section">
+      <div class="src-cat-title">📉 Derivativos &amp; Mercado de Futuros</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/btc-open-interest/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(239,68,68,.1);color:var(--rd)">📊</div>
+          <div class="src-link-body"><div class="src-link-name">Open Interest</div><div class="src-link-desc">Contratos futuros BTC abertos</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com/charts/bitcoin-funding-rates/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.1);color:var(--yl)">💸</div>
+          <div class="src-link-body"><div class="src-link-name">Funding Rates</div><div class="src-link-desc">Custo de manter posições</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/funding_rate.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">💹</div>
+          <div class="src-link-body"><div class="src-link-name">Funding Rate (BGeom.)</div><div class="src-link-desc">Visão histórica funding rates</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/open_interest_futures.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">🔮</div>
+          <div class="src-link-body"><div class="src-link-name">OI Futuros (BGeom.)</div><div class="src-link-desc">Open Interest histórico</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://coinglass.com" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">🏦</div>
+          <div class="src-link-body"><div class="src-link-name">Coinglass</div><div class="src-link-desc">Liquidações &amp; derivativos</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- DASHBOARDS COMPLETOS -->
+    <div class="src-section">
+      <div class="src-cat-title">🖥 Dashboards &amp; Ferramentas Completas</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://charts.checkonchain.com/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">✅</div>
+          <div class="src-link-body"><div class="src-link-name">CheckOnChain</div><div class="src-link-desc">Dashboard on-chain completo</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://mempool.space" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">⚡</div>
+          <div class="src-link-body"><div class="src-link-name">Mempool.space</div><div class="src-link-desc">Rede Bitcoin em tempo real</div></div>
+          <span class="src-badge badge-live">Live</span>
+        </a>
+        <a class="src-link" href="https://clarkmoody.com/dashboard/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">📡</div>
+          <div class="src-link-body"><div class="src-link-name">Clark Moody</div><div class="src-link-desc">Dashboard técnico Bitcoin</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/bitcoin_monthly_history.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">📅</div>
+          <div class="src-link-body"><div class="src-link-name">Histórico Mensal BTC</div><div class="src-link-desc">Performance mensal histórica</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://insights.glassnode.com/tag/newsletter/" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">📰</div>
+          <div class="src-link-body"><div class="src-link-name">Glassnode Insights</div><div class="src-link-desc">Newsletter análise on-chain</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.bitcoinmagazinepro.com" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">₿</div>
+          <div class="src-link-body"><div class="src-link-name">BTC Magazine Pro</div><div class="src-link-desc">+40 indicadores on-chain grátis</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- MACRO -->
+    <div class="src-section">
+      <div class="src-cat-title">🌍 Macro-Económico &amp; Liquidez</div>
+      <div class="src-grid">
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/m2_global.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">💵</div>
+          <div class="src-link-body"><div class="src-link-name">M2 Global</div><div class="src-link-desc">Liquidez global vs BTC</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/fedfunds.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(239,68,68,.1);color:var(--rd)">🏛</div>
+          <div class="src-link-body"><div class="src-link-name">Fed Funds Rate</div><div class="src-link-desc">Taxa da Reserva Federal</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">🎯</div>
+          <div class="src-link-body"><div class="src-link-name">CME FedWatch</div><div class="src-link-desc">Prob. de corte de taxas Fed</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://fred.stlouisfed.org" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.1);color:var(--yl)">📊</div>
+          <div class="src-link-body"><div class="src-link-name">FRED</div><div class="src-link-desc">Federal Reserve Economic Data</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://www.investing.com/economic-calendar" target="_blank">
+          <div class="src-link-icon" style="background:rgba(168,85,247,.1);color:var(--pu)">🗓</div>
+          <div class="src-link-body"><div class="src-link-name">Calendário Macro</div><div class="src-link-desc">CPI, NFP, FOMC, GDP</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://charts.bgeometrics.com/graphics/etf.html" target="_blank">
+          <div class="src-link-icon" style="background:rgba(247,147,26,.1);color:var(--o)">🏦</div>
+          <div class="src-link-body"><div class="src-link-name">ETF Flows</div><div class="src-link-desc">Fluxos ETFs Bitcoin spot</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://polymarket.com" target="_blank">
+          <div class="src-link-icon" style="background:rgba(34,197,94,.1);color:var(--gn)">🎲</div>
+          <div class="src-link-body"><div class="src-link-name">Polymarket</div><div class="src-link-desc">Mercado de previsões BTC</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+        <a class="src-link" href="https://rwa.xyz" target="_blank">
+          <div class="src-link-icon" style="background:rgba(59,130,246,.1);color:var(--bl)">🏗</div>
+          <div class="src-link-body"><div class="src-link-name">RWA.xyz</div><div class="src-link-desc">Real World Assets tokenizados</div></div>
+          <span class="src-badge badge-free">Grátis</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- GLASSNODE ADVANCED -->
+    <div class="src-section">
+      <div class="src-cat-title">🔬 Glassnode — Métricas Avançadas <span style="font-size:10px;color:var(--yl);font-weight:400;margin-left:6px">(requer conta)</span></div>
+      <div class="src-grid">
+        <a class="src-link" href="https://studio.glassnode.com/charts/addresses.ActiveCount?a=BTC" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.08);color:var(--yl)">👥</div>
+          <div class="src-link-body"><div class="src-link-name">Endereços Ativos</div><div class="src-link-desc">Active addresses diários</div></div>
+          <span class="src-badge badge-pro">Pro</span>
+        </a>
+        <a class="src-link" href="https://studio.glassnode.com/charts/addresses.NewNonZeroCount?a=BTC" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.08);color:var(--yl)">🆕</div>
+          <div class="src-link-body"><div class="src-link-name">Novos Endereços</div><div class="src-link-desc">Adoção e crescimento da rede</div></div>
+          <span class="src-badge badge-pro">Pro</span>
+        </a>
+        <a class="src-link" href="https://studio.glassnode.com/charts/active-address-momentum?a=BTC" target="_blank">
+          <div class="src-link-icon" style="background:rgba(234,179,8,.08);color:var(--yl)">📈</div>
+          <div class="src-link-body"><div class="src-link-name">Address Momentum</div><div class="src-link-desc">Momentum de endereços ativos</div></div>
+          <span class="src-badge badge-pro">Pro</span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /tab-fontes -->
+
+  <div style="text-align:center;font-size:10px;color:#222;margin-top:24px">
+    Bitcoin Academy Club © 2026 · <a href="https://www.instagram.com/bitcoin_academy_club/" target="_blank" style="color:#333;text-decoration:none">@bitcoin_academy_club</a>
+  </div>
+</div><!-- /wrap -->
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const fmtU = n => !n?'—':n>=1e12?`$${(n/1e12).toFixed(2)}T`:n>=1e9?`$${(n/1e9).toFixed(2)}B`:n>=1e6?`$${(n/1e6).toFixed(2)}M`:`$${n.toFixed(0)}`;
+const fmtE = n => new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+const fmtH = n => !n?'—':n>=1e18?`${(n/1e18).toFixed(2)} EH/s`:n>=1e15?`${(n/1e15).toFixed(2)} PH/s`:`${(n/1e12).toFixed(2)} TH/s`;
+const pStr = v => v>0?`▲ ${v.toFixed(2)}%`:`▼ ${Math.abs(v).toFixed(2)}%`;
+const pCls = v => v>0?'up':v<0?'dn':'ne';
+
+function setSC(id,st,lbl){
+  const e=$(id);if(!e)return;
+  e.className=`sc sc-${st}`;
+  e.innerHTML=`${st==='ok'?'✅':st==='err'?'❌':'<span class="spin">⏳</span>'} ${lbl}`;
+}
+
+// TABS
+function showTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  const p=document.getElementById('tab-'+id);
+  if(p) p.classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// HALVING
+function calcHalving(){
+  const next=new Date('2028-04-20T00:00:00Z'),prev=new Date('2024-04-20T00:00:00Z'),now=new Date();
+  const days=Math.ceil((next-now)/86400000);
+  const p=Math.min(100,Math.round(((now-prev)/(next-prev))*100));
+  $('halvDays').textContent=days>0?`${days.toLocaleString('pt-PT')} dias`:'Iminente!';
+  $('halvBar').style.width=p+'%';
+  $('halvPct').textContent=`${p}%`;
+}
+
+// CBBI
+async function fetchCBBI(){
+  setSC('sc-cbbi','load','CBBI');
+  try{
+    const r=await fetch('https://colintalkscrypto.com/cbbi/data/latest.json');
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    // encontrar o valor mais recente
+    const keys=Object.keys(d.Confidence||{});
+    if(!keys.length) throw new Error('no data');
+    const lastKey=keys[keys.length-1];
+    const val=Math.round((d.Confidence[lastKey]||0)*100);
+
+    $('cbbiNum').textContent=val;
+    $('cbbiBar').style.width=val+'%';
+
+    const circle=$('cbbiCircle');
+    let label,color,zc;
+    if(val>=90){label='Topo de Ciclo';color='#EF4444';zc='z-r';}
+    else if(val>=75){label='Alta Confiança';color='#EAB308';zc='z-y';}
+    else if(val>=50){label='Meio de Ciclo';color='#F7931A';zc='z-o';}
+    else if(val>=25){label='Acumulação';color='#22C55E';zc='z-g';}
+    else{label='Fundo de Ciclo';color='#3B82F6';zc='z-p';}
+
+    $('cbbiNum').style.color=color;
+    $('cbbiLabel').textContent=label;
+    $('cbbiLabel').style.color=color;
+    if(circle) circle.style.borderColor=color;
+    $('cbbiBar').style.background=color;
+
+    const tips={
+      'Topo de Ciclo':'⚠ Indicadores sugerem proximidade de topo. Precaução máxima.',
+      'Alta Confiança':'Mercado aquecido. Gestão de risco ativa recomendada.',
+      'Meio de Ciclo':'Zona intermédia de ciclo. Momentum positivo mas atenção.',
+      'Acumulação':'Zona favorável historicamente. DCA disciplinado pode ser apropriado.',
+      'Fundo de Ciclo':'⚡ Zona de fundo histórica. Máxima oportunidade, mínimo FOMO.'
+    };
+    $('cbbiTip').textContent=tips[label]||'';
+
+    // componentes individuais do CBBI
+    const comps=[['cbbi-pi','Pi Cycle Top',d['Pi Cycle Top']||{}],['cbbi-rhodl','RHODL',d['RHODL Ratio']||{}],['cbbi-rp','Real Profit',d['Realized Price Ratio']||{}],['cbbi-puell','Puell',d['Puell Multiple']||{}],['cbbi-rr','Rsrv Risk',d['Reserve Risk']||{}]];
+    comps.forEach(([eid,,obj])=>{
+      const el=$(eid);if(!el)return;
+      const v=obj[lastKey];
+      if(v!==undefined){
+        const pv=Math.round(v*100);
+        el.textContent=pv+'%';
+        el.style.color=pv>=75?'#EF4444':pv>=50?'#EAB308':pv>=25?'#F7931A':'#22C55E';
+      }
+    });
+
+    setSC('sc-cbbi','ok','CBBI');
+  }catch(e){
+    $('cbbiLabel').textContent='Indisponível';
+    setSC('sc-cbbi','err','CBBI');
+    console.warn('fetchCBBI:',e);
+  }
+}
+
+// FEAR & GREED
+async function fetchFG(){
+  setSC('sc-fg','load','Fear & Greed');
+  try{
+    const r=await fetch('https://api.alternative.me/fng/?limit=1&format=json');
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    const v=parseInt(d.data[0].value),lbl=d.data[0].value_classification;
+    $('fgNum').textContent=v;
+    const pt={'Extreme Fear':'Medo Extremo','Fear':'Medo','Neutral':'Neutro','Greed':'Ganância','Extreme Greed':'Ganância Extrema'};
+    $('fgLbl').textContent=pt[lbl]||lbl;
+    const b=$('fgBar');
+    b.style.width=v+'%';
+    b.style.background=v>=75?'#EF4444':v>=55?'#EAB308':v>=45?'#F7931A':v>=25?'#3B82F6':'#22C55E';
+    const tips={'Extreme Fear':'⚠ Zona histórica de acumulação. HODLers experientes compram quando outros têm medo extremo.','Fear':'Mercado cauteloso. Zona favorável para DCA disciplinado.','Neutral':'Equilíbrio entre compradores e vendedores. Sem sinal direcional claro.','Greed':'Otimismo crescente. Cuidado com decisões emocionais (FOMO).','Extreme Greed':'Zona de risco histórico elevado. Topos de ciclo coincidem frequentemente com ganância extrema.'};
+    $('fgTip').textContent=tips[lbl]||'';
+    setSC('sc-fg','ok','Fear & Greed');
+  }catch(e){$('fgLbl').textContent='Indisponível';setSC('sc-fg','err','Fear & Greed');}
+}
+
+// PREÇO
+async function fetchPrice(){
+  setSC('sc-price','load','Preço BTC');
+  try{
+    const r=await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=EUR,USD');
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    const E=d.RAW?.BTC?.EUR,U=d.RAW?.BTC?.USD;
+    if(!E) throw new Error('no data');
+    $('pEur').style.fontSize='';$('pEur').style.color='';
+    $('pEur').textContent=fmtE(E.PRICE);
+    $('pUsd').textContent=`USD ${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(U.PRICE)}`;
+    const c1h=E.CHANGEPCTHOUR||0,c24=E.CHANGEPCT24HOUR||0;
+    $('pChg').innerHTML=[['1h',c1h],['24h',c24]].map(([l,v])=>`<div class="pill ${pCls(v)}">${pStr(v)} ${l}</div>`).join('');
+    $('mktCap').textContent=fmtU(E.MKTCAP);
+    $('vol24').textContent=fmtU(E.TOTALVOLUME24HTO);
+    try{
+      const h=await fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=EUR&limit=30');
+      const hd=await h.json();const arr=hd.Data?.Data;
+      if(arr&&arr.length>=31){
+        const now2=arr[arr.length-1].close,p7=arr[arr.length-8].close,p30=arr[0].close;
+        const v7=((now2-p7)/p7*100),v30=((now2-p30)/p30*100);
+        $('c7d').textContent=pStr(v7);$('c7d').style.color=v7>0?'var(--gn)':'var(--rd)';
+        $('c7dS').textContent=v7>0?'semana positiva':'semana negativa';
+        $('c30d').textContent=pStr(v30);$('c30d').style.color=v30>0?'var(--gn)':'var(--rd)';
+        $('c30dS').textContent=v30>0?'mês positivo':'mês negativo';
+        $('pChg').innerHTML+=[['7d',v7],['30d',v30]].map(([l,v])=>`<div class="pill ${pCls(v)}">${pStr(v)} ${l}</div>`).join('');
+      }
+    }catch(_){}
+    setSC('sc-price','ok','Preço BTC');
+  }catch(e){
+    $('pEur').textContent='Indisponível';$('pEur').style.color='var(--rd)';$('pEur').style.fontSize='18px';
+    setSC('sc-price','err','Preço BTC');
+  }
+}
+
+// MEMPOOL
+async function fetchMempool(){
+  setSC('sc-fees','load','Mempool & Fees');
+  try{
+    const [fR,mR,dR]=await Promise.all([
+      fetch('https://mempool.space/api/v1/fees/recommended'),
+      fetch('https://mempool.space/api/mempool'),
+      fetch('https://mempool.space/api/v1/difficulty-adjustment'),
+    ]);
+    if(!fR.ok) throw new Error(fR.status);
+    const fees=await fR.json();
+    $('feeH').textContent=fees.fastestFee??'—';
+    $('feeM').textContent=fees.halfHourFee??'—';
+    $('feeL').textContent=fees.economyFee??'—';
+    if(mR.ok){const m=await mR.json();$('mTxs').textContent=(m.count||0).toLocaleString('pt-PT');}
+    if(dR.ok){
+      const d=await dR.json();
+      if(d.difficultyChange!==undefined){
+        const s=d.difficultyChange>=0?'+':'';
+        $('diffAdj').textContent=`${s}${d.difficultyChange.toFixed(1)}%`;
+        if(d.remainingBlocks!==undefined) $('diffBlocks').textContent=`${d.remainingBlocks} blocos restantes`;
+      }
+      if(d.currentDifficulty) $('diffVal').textContent=`${(d.currentDifficulty/1e12).toFixed(2)} T`;
+    }
+    setSC('sc-fees','ok','Mempool & Fees');
+  }catch(e){setSC('sc-fees','err','Mempool & Fees');}
+}
+
+// HASHRATE
+async function fetchHashrate(){
+  setSC('sc-hr','load','Hashrate');
+  try{
+    const r=await fetch('https://mempool.space/api/v1/mining/hashrate/3m');
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    const hr=d.currentHashrate;
+    if(hr){
+      $('hrate').textContent=fmtH(hr);
+      // calcular MAs aproximadas com base nos dados históricos
+      const arr=d.hashrates||[];
+      if(arr.length>=60){
+        const last30=arr.slice(-30).map(x=>x.avgHashrate);
+        const last60=arr.map(x=>x.avgHashrate);
+        const ma30=last30.reduce((a,b)=>a+b,0)/last30.length;
+        const ma60=last60.reduce((a,b)=>a+b,0)/last60.length;
+        const el30=$('hr30'),el60=$('hr60');
+        if(el30) el30.textContent=fmtH(ma30);
+        if(el60) el60.textContent=fmtH(ma60);
+      }
+      setSC('sc-hr','ok','Hashrate');
+    } else throw new Error('no hr');
+  }catch(e){setSC('sc-hr','err','Hashrate');}
+}
+
+// ULTIMO BLOCO
+async function fetchLastBlock(){
+  try{
+    const r=await fetch('https://mempool.space/api/blocks/tip/height');
+    if(!r.ok) return;
+    const height=await r.json();
+    const el=$('lastBlock');
+    if(el) el.textContent='#'+height.toLocaleString('pt-PT');
+    const el2=$('lastBlockTime');
+    if(el2) el2.textContent='altura atual';
+  }catch(_){}
+}
+
+// ON-CHAIN CONTEXTO (atualizar semanalmente com briefings BAC)
+function setOnChain(){
+  [
+    ['vMvrv','zMvrv','~2.8','z-o','Zona Fair'],
+    ['vPuell','zPuell','~0.9','z-g','Favorável'],
+    ['vNupl','zNupl','~0.52','z-o','Optimismo'],
+    ['vRhodl','zRhodl','—','z-n','Ver CoinAnk'],
+    ['vRr','zRr','Baixo','z-g','Favorável HODL'],
+    ['vSopr','zSopr','~1.03','z-o','Em lucro'],
+    ['vReal','zReal','~$48K','z-g','Abaixo do preço'],
+    ['vSth','zSth','—','z-n','Ver BTC Mag Pro'],
+    ['v2yma','z2yma','—','z-n','Ver CoinAnk'],
+    ['vPi','zPi','Não ativado','z-g','Ciclo em curso'],
+  ].forEach(([v,z,val,zc,zl])=>{
+    const ve=$(v),ze=$(z);
+    if(ve) ve.textContent=val;
+    if(ze){ze.textContent=zl;ze.className='zone '+zc;}
+  });
+}
+
+async function init(){
+  const b=$('btnR');
+  if(b){b.disabled=true;b.textContent='↻ A carregar...';}
+  calcHalving();
+  setOnChain();
+  await Promise.allSettled([fetchPrice(),fetchFG(),fetchCBBI(),fetchMempool(),fetchHashrate(),fetchLastBlock()]);
+  $('ts').textContent='Atualizado: '+new Date().toLocaleTimeString('pt-PT');
+  if(b){b.disabled=false;b.textContent='↻ Atualizar';}
+}
+
+init();
+setInterval(init,2*60*1000);
+</script>
+</body>
+</html>
