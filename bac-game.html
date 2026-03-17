@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAC Game · Aprende Bitcoin Jogando</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --o:#F7931A;--og:rgba(247,147,26,.12);--bg:#050505;--c1:#0C0C0C;--c2:#111;
+  --bd:#1E1E1E;--t:#E8E8E8;--m:#555;--m2:#888;
+  --gn:#22C55E;--rd:#EF4444;--yl:#EAB308;--bl:#3B82F6;--pu:#A855F7;
+  --gold:#FFD700;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--t);font-family:system-ui,-apple-system,sans-serif;font-size:14px;overflow-x:hidden}
+
+/* ANIMATIONS */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px var(--o)}50%{box-shadow:0 0 30px var(--o),0 0 60px rgba(247,147,26,.3)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes confetti{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes goldShine{0%,100%{background-position:200% center}50%{background-position:-200% center}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes blockMine{0%{background:var(--c1)}50%{background:rgba(247,147,26,.15)}100%{background:rgba(34,197,94,.1)}}
+
+.fade{animation:fadeIn .4s ease both}
+.slide{animation:slideUp .5s ease both}
+.float{animation:float 3s ease-in-out infinite}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.glow{animation:glow 2s ease-in-out infinite}
+.bounce{animation:bounce .6s ease-in-out}
+
+/* LAYOUT */
+.app{max-width:800px;margin:0 auto;padding:0 12px 60px;min-height:100vh}
+
+/* HEADER */
+.game-header{background:linear-gradient(135deg,#0A0A0A,#111);border:1px solid var(--bd);border-radius:16px;padding:16px 20px;margin:14px 0 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.game-logo{font-size:20px;font-weight:900;color:var(--o);letter-spacing:-.5px}
+.game-sub{font-size:10px;color:var(--m);margin-top:2px}
+.xp-bar-wrap{flex:1;max-width:260px}
+.xp-label{display:flex;justify-content:space-between;font-size:10px;color:var(--m);margin-bottom:4px}
+.xp-bar{height:6px;background:#1A1A1A;border-radius:6px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--o),#FFD700);border-radius:6px;transition:width .8s ease}
+.level-badge{background:var(--og);border:1px solid rgba(247,147,26,.3);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--o)}
+
+/* STAGE MAP */
+.stage-map{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--c1);border:1px solid var(--bd);border-radius:12px}
+.stage-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .2s;border:2px solid transparent;flex-shrink:0;position:relative}
+.stage-dot.done{background:rgba(34,197,94,.2);border-color:var(--gn);color:var(--gn)}
+.stage-dot.active{background:rgba(247,147,26,.2);border-color:var(--o);color:var(--o);animation:glow 2s ease-in-out infinite}
+.stage-dot.locked{background:#0A0A0A;border-color:#1A1A1A;color:#222;cursor:not-allowed}
+.stage-dot.gold{background:rgba(255,215,0,.15);border-color:var(--gold);color:var(--gold);animation:glow 2s ease-in-out infinite}
+.stage-line{flex:1;height:2px;background:#1A1A1A;align-self:center;min-width:8px}
+.stage-line.done{background:var(--gn)}
+
+/* CARDS */
+.card{background:var(--c1);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-body{font-size:12px;color:var(--m2);line-height:1.8}
+.highlight{background:rgba(247,147,26,.07);border-left:3px solid var(--o);border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:var(--t);line-height:1.7;margin:10px 0}
+
+/* BUTTONS */
+.btn{padding:10px 22px;border-radius:10px;font-size:13px;font-weight:800;border:none;background:var(--o);color:#000;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-s{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:transparent;color:var(--m);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-s:hover{border-color:var(--o);color:var(--o)}
+.btn-gold{background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;animation:glow 2s ease-in-out infinite}
+
+/* QUIZ */
+.quiz-opt{background:#080808;border:1px solid var(--bd);border-radius:9px;padding:11px 14px;cursor:pointer;font-size:12px;margin-bottom:7px;transition:all .15s;display:flex;align-items:center;gap:8px}
+.quiz-opt:hover{border-color:rgba(247,147,26,.4);background:rgba(247,147,26,.04)}
+.quiz-opt.correct{background:rgba(34,197,94,.1);border-color:var(--gn);color:var(--gn)}
+.quiz-opt.wrong{background:rgba(239,68,68,.1);border-color:var(--rd);color:var(--rd);animation:shake .3s ease}
+.quiz-opt.reveal{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2)}
+.opt-icon{width:22px;height:22px;border-radius:50%;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+/* INTERACTIVE ELEMENTS */
+.mine-btn{width:100%;padding:18px;font-size:24px;border-radius:12px;background:linear-gradient(135deg,rgba(247,147,26,.15),rgba(247,147,26,.05));border:2px solid rgba(247,147,26,.3);color:var(--o);cursor:pointer;font-family:inherit;transition:all .2s;font-weight:900;letter-spacing:1px}
+.mine-btn:hover:not(:disabled){background:rgba(247,147,26,.2);transform:scale(1.02)}
+.mine-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.hash-display{font-family:'Courier New',monospace;font-size:11px;background:#050505;border:1px solid var(--bd);border-radius:8px;padding:10px 12px;word-break:break-all;color:var(--m2);transition:color .3s;min-height:40px;line-height:1.6}
+.hash-display.valid{color:var(--gn);border-color:rgba(34,197,94,.3)}
+
+.block-visual{background:linear-gradient(135deg,rgba(247,147,26,.08),rgba(247,147,26,.02));border:2px solid rgba(247,147,26,.2);border-radius:12px;padding:14px 16px;font-family:'Courier New',monospace;font-size:11px;transition:all .5s}
+.block-visual.mined{border-color:var(--gn);background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.02))}
+
+.tx-item{background:#080808;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s}
+.tx-item:hover{border-color:rgba(247,147,26,.3)}
+.tx-item.selected{border-color:var(--o);background:rgba(247,147,26,.06)}
+.tx-item.confirmed{border-color:var(--gn);background:rgba(34,197,94,.06)}
+
+.mempool-area{background:#050505;border:1px solid var(--bd);border-radius:10px;padding:12px;min-height:120px;position:relative;overflow:hidden}
+.mempool-tx{display:inline-block;margin:3px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;animation:float 2s ease-in-out infinite}
+.mempool-tx.high{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--rd)}
+.mempool-tx.med{background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.3);color:var(--o)}
+.mempool-tx.low{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--gn)}
+
+.node-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.node-item{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center;transition:all .3s;cursor:default}
+.node-item.validating{border-color:var(--o);background:rgba(247,147,26,.08);animation:pulse 1s ease-in-out infinite}
+.node-item.valid{border-color:var(--gn);background:rgba(34,197,94,.08)}
+.node-item.invalid{border-color:var(--rd);background:rgba(239,68,68,.08)}
+
+.utxo-box{background:#080808;border:2px solid var(--bd);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;transition:all .3s;cursor:pointer}
+.utxo-box.spent{opacity:.4;border-style:dashed;text-decoration:line-through}
+.utxo-box.selected{border-color:var(--o);background:rgba(247,147,26,.08)}
+.utxo-box.new{border-color:var(--gn);background:rgba(34,197,94,.08);animation:fadeIn .5s ease}
+
+.addr-type{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.addr-type:hover{border-color:rgba(247,147,26,.4)}
+.addr-type.active{border-color:var(--o);background:var(--og)}
+.addr-prefix{font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:6px}
+
+.wallet-card{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:10px}
+.wallet-card:hover:not(.locked-w){border-color:rgba(247,147,26,.3)}
+.wallet-card.selected-w{border-color:var(--o);background:var(--og)}
+.wallet-card.locked-w{opacity:.5;cursor:not-allowed}
+.wallet-card.danger-w{border-color:rgba(239,68,68,.3);background:rgba(239,68,34,.04)}
+
+.sparrow-ui{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:14px;font-family:system-ui;overflow:hidden}
+.sparrow-tab{display:flex;gap:1px;background:#050505;border-radius:7px 7px 0 0;overflow:hidden;margin-bottom:0}
+.sparrow-tab-btn{flex:1;padding:7px 4px;text-align:center;font-size:10px;font-weight:600;background:#0A0A0A;color:var(--m);cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.sparrow-tab-btn.active{background:var(--c1);color:var(--o)}
+.sparrow-body{background:var(--c1);border:1px solid var(--bd);border-radius:0 0 8px 8px;padding:12px}
+
+.p2p-step{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;transition:all .3s}
+.p2p-step.active-step{border-color:var(--o);background:rgba(247,147,26,.06)}
+.p2p-step.done-step{border-color:var(--gn);background:rgba(34,197,94,.06)}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s}
+.step-num.active{background:var(--o);color:#000}
+.step-num.done{background:var(--gn);color:#000}
+
+/* PROGRESS & SCORE */
+.score-popup{position:fixed;top:80px;right:20px;background:var(--o);color:#000;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:800;z-index:1000;animation:slideUp .3s ease,fadeIn .3s ease;pointer-events:none}
+
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:999;animation:confetti 3s ease-in forwards}
+
+.stage-complete{text-align:center;padding:24px;background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.02));border:1px solid rgba(34,197,94,.2);border-radius:14px;animation:fadeIn .5s ease}
+
+/* GOLD STAGE */
+.gold-card{background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,165,0,.02));border:1px solid rgba(255,215,0,.25);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.gold-title{font-size:16px;font-weight:900;background:linear-gradient(135deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* CONFIRM ANIMATION */
+.confirm-block{background:#080808;border:2px solid var(--bd);border-radius:8px;padding:10px;text-align:center;font-size:11px;transition:all .5s}
+.confirm-block.confirmed{border-color:var(--gn);background:rgba(34,197,94,.08)}
+.confirm-block.current{border-color:var(--o);background:rgba(247,147,26,.08);animation:glow 1s ease-in-out infinite}
+
+/* MISC */
+.tag{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600;display:inline-block}
+.tag-green{background:rgba(34,197,94,.12);color:var(--gn)}
+.tag-red{background:rgba(239,68,68,.12);color:var(--rd)}
+.tag-orange{background:rgba(247,147,26,.12);color:var(--o)}
+.tag-blue{background:rgba(59,130,246,.12);color:var(--bl)}
+.tag-gold{background:rgba(255,215,0,.12);color:var(--gold)}
+
+.progress-stages{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.ps{height:4px;flex:1;background:#1A1A1A;border-radius:4px;min-width:20px;transition:background .5s}
+.ps.done{background:var(--gn)}
+.ps.active{background:var(--o)}
+
+input[type=range]{accent-color:var(--o);width:100%}
+input[type=number],input[type=text]{background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 11px;color:var(--t);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--o)}
+
+@media(max-width:600px){
+  .node-grid{grid-template-columns:1fr 1fr}
+  .stage-map{gap:3px}
+  .stage-dot{width:24px;height:24px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<div class="game-header fade">
+  <div>
+    <div class="game-logo">⛓ BAC Game</div>
+    <div class="game-sub">Bitcoin Academy Club · Aprende jogando</div>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-label"><span>XP</span><span id="xp-text">0 / 1100</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+  </div>
+  <div class="level-badge" id="level-badge">Nível 1</div>
+</div>
+
+<!-- STAGE MAP -->
+<div class="stage-map">
+  <div class="stage-dot active" id="sd-0" onclick="jumpStage(0)" title="Blocos">⛓</div>
+  <div class="stage-line" id="sl-0"></div>
+  <div class="stage-dot locked" id="sd-1" onclick="jumpStage(1)" title="Transações">💸</div>
+  <div class="stage-line" id="sl-1"></div>
+  <div class="stage-dot locked" id="sd-2" onclick="jumpStage(2)" title="Mempool">🏊</div>
+  <div class="stage-line" id="sl-2"></div>
+  <div class="stage-dot locked" id="sd-3" onclick="jumpStage(3)" title="Nodes">🌐</div>
+  <div class="stage-line" id="sl-3"></div>
+  <div class="stage-dot locked" id="sd-4" onclick="jumpStage(4)" title="UTXO">🪙</div>
+  <div class="stage-line" id="sl-4"></div>
+  <div class="stage-dot locked" id="sd-5" onclick="jumpStage(5)" title="Confirmações">✅</div>
+  <div class="stage-line" id="sl-5"></div>
+  <div class="stage-dot locked" id="sd-6" onclick="jumpStage(6)" title="Endereços">📬</div>
+  <div class="stage-line" id="sl-6"></div>
+  <div class="stage-dot locked" id="sd-7" onclick="jumpStage(7)" title="Carteiras">🔐</div>
+  <div class="stage-line" id="sl-7"></div>
+  <div class="stage-dot locked" id="sd-8" onclick="jumpStage(8)" title="Assinaturas Criptográficas">✍</div>
+  <div class="stage-line" id="sl-8"></div>
+  <div class="stage-dot locked" id="sd-9" onclick="jumpStage(9)" title="Sparrow / Blue Wallet">💼</div>
+  <div class="stage-line" id="sl-9"></div>
+  <div class="stage-dot locked gold" id="sd-10" onclick="jumpStage(10)" title="P2P Gold">🥇</div>
+</div>
+
+<!-- STAGE CONTENT -->
+<div id="stage-content"></div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let G = {
+  stage: 0,
+  xp: 0,
+  maxXp: 1100,
+  completed: new Set(),
+  quizAnswered: new Set(),
+  data: {}
+};
+
+const STAGE_XP = [100,100,100,100,100,100,100,100,100,100,200];
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const randHex = n => [...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function addXP(amount) {
+  G.xp = Math.min(G.xp + amount, G.maxXp);
+  const pct = (G.xp / G.maxXp * 100).toFixed(1);
+  const fill = $('xp-fill');
+  if(fill) fill.style.width = pct + '%';
+  const txt = $('xp-text');
+  if(txt) txt.textContent = `${G.xp} / ${G.maxXp}`;
+  const lvl = Math.floor(G.xp / 100) + 1;
+  const badge = $('level-badge');
+  if(badge) badge.textContent = `Nível ${lvl}`;
+  showScorePopup('+' + amount + ' XP');
+}
+
+function showScorePopup(txt) {
+  const el = document.createElement('div');
+  el.className = 'score-popup';
+  el.textContent = txt;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+function showConfetti() {
+  const colors = ['#F7931A','#22C55E','#FFD700','#3B82F6','#A855F7'];
+  for(let i=0;i<20;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${colors[i%colors.length]};animation-delay:${Math.random()*.5}s;animation-duration:${2+Math.random()}s;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),3000);
+  }
+}
+
+function updateStageDots() {
+  for(let i=0;i<=10;i++){
+    const dot = $(`sd-${i}`);
+    const line = $(`sl-${i}`);
+    if(!dot) continue;
+    if(G.completed.has(i)) {
+      dot.className = i===10 ? 'stage-dot gold' : 'stage-dot done';
+      dot.innerHTML = i===10 ? '🥇' : '✓';
+    } else if(i === G.stage) {
+      dot.className = i===10 ? 'stage-dot gold' : 'stage-dot active';
+    } else if(i <= (G.completed.size)) {
+      dot.className = 'stage-dot active';
+      dot.style.opacity = '.6';
+    }
+    if(line && G.completed.has(i)) line.className = 'stage-line done';
+  }
+}
+
+function jumpStage(n) {
+  const unlocked = n === 0 || G.completed.has(n-1) || G.completed.has(n);
+  if(!unlocked) return;
+  G.stage = n;
+  renderStage(n);
+}
+
+function completeStage() {
+  G.completed.add(G.stage);
+  addXP(STAGE_XP[G.stage]);
+  showConfetti();
+  updateStageDots();
+  const next = G.stage + 1;
+  if(next <= 10) {
+    const dot = $(`sd-${next}`);
+    if(dot) dot.className = next===10 ? 'stage-dot gold' : 'stage-dot active';
+    setTimeout(() => {
+      G.stage = next;
+      renderStage(next);
+    }, 2200);
+  }
+}
+
+// ── QUIZ HELPER ───────────────────────────────────────────────────────────
+function renderQuiz(containerId, questions, onAllCorrect) {
+  const c = $(containerId); if(!c) return;
+  let score = 0;
+  const total = questions.length;
+
+  c.innerHTML = questions.map((q,i) => `
+    <div style="margin-bottom:14px" id="q-block-${i}">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--t)">${q.q}</div>
+      ${q.opts.map((o,j) => `
+        <div class="quiz-opt" id="qo-${i}-${j}" onclick="answerQ(${i},${j},${q.a},${total},'${containerId}')">
+          <div class="opt-icon">${'ABCD'[j]}</div>
+          <span>${o}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  c._onAllCorrect = onAllCorrect;
+  c._total = total;
+  c._score = 0;
+}
+
+window.answerQ = function(qi, ji, correct, total, cid) {
+  const opt = $(`qo-${qi}-${ji}`);
+  if(!opt || opt.dataset.answered) return;
+  const qKey = `${cid}-${qi}`;
+  if(G.quizAnswered.has(qKey)) return;
+  G.quizAnswered.add(qKey);
+  // mark all opts for this question
+  for(let k=0;k<4;k++){const o=$(`qo-${qi}-${k}`);if(o){o.dataset.answered='1';o.style.cursor='default';}}
+  const isCorrect = ji === correct;
+  opt.className = 'quiz-opt ' + (isCorrect ? 'correct' : 'wrong');
+  $(`qo-${qi}-${correct}`)?.classList.add('correct');
+  const c = $(cid);
+  if(!c) return;
+  if(isCorrect) {
+    c._score = (c._score||0) + 1;
+    addXP(10);
+  }
+  if(c._score === c._total && c._onAllCorrect) {
+    setTimeout(() => c._onAllCorrect(), 600);
+  }
+};
+
+// ── STAGE RENDERER ────────────────────────────────────────────────────────
+function renderStage(n) {
+  const stages = [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10];
+  const c = $('stage-content');
+  c.innerHTML = '';
+  c.className = 'fade';
+  stages[n]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 0: BLOCO GENESIS
+// ══════════════════════════════════════════════════════════════════
+function s0() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">⛓</span> Etapa 1 — O Bloco Bitcoin</div>
+    <div class="card-body">
+      O Bitcoin é uma cadeia de blocos — a <strong style="color:var(--o)">blockchain</strong>. Cada bloco é como uma página de um livro contabilístico público que registra transações permanentemente.<br><br>
+      Um bloco Bitcoin contém:
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:4px">📋 Header (Cabeçalho)</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • <strong>Hash do bloco anterior</strong> — ligação com o bloco antes<br>
+          • <strong>Merkle Root</strong> — impressão digital de todas as txs<br>
+          • <strong>Timestamp</strong> — data e hora de criação<br>
+          • <strong>Nonce</strong> — número mágico da mineração<br>
+          • <strong>Bits (dificuldade)</strong> — quão difícil de minerar
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:4px">💸 Body (Corpo)</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • <strong>Transação Coinbase</strong> — recompensa ao miner<br>
+          • <strong>Transações de utilizadores</strong> — transferências de BTC<br>
+          • Até ~2.700 transações por bloco<br>
+          • Bloco a cada ~10 minutos<br>
+          • Tamanho máximo: 4MB (SegWit)
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🔗 <strong>Cadeia imutável:</strong> Cada bloco contém o hash do bloco anterior. Se alterares qualquer dado num bloco antigo, todos os blocos seguintes ficam inválidos — seria necessário refazer o trabalho computacional de toda a cadeia. É por isso que o Bitcoin é imutável.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">⛏</span> Simula a Mineração</div>
+    <div class="card-body" style="margin-bottom:12px">
+      O miner testa bilhões de valores de <strong style="color:var(--o)">nonce</strong> até encontrar um hash que começa com zeros suficientes. Clica para simular:
+    </div>
+    <div class="block-visual" id="block-vis" style="margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;margin-bottom:8px">
+        <div><span style="color:var(--m)">Bloco #</span> <span style="color:var(--o);font-weight:700" id="bk-num">880001</span></div>
+        <div><span style="color:var(--m)">Nonce:</span> <span style="color:var(--t)" id="bk-nonce">0</span></div>
+        <div><span style="color:var(--m)">Txs:</span> <span style="color:var(--t)" id="bk-txs">0</span></div>
+        <div><span style="color:var(--m)">Dificuldade:</span> <span style="color:var(--yl)">00000...</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--m);margin-bottom:4px">Hash actual:</div>
+      <div class="hash-display" id="hash-disp">Clica em "Minerar Bloco" para começar...</div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;color:var(--m);margin-bottom:4px">Velocidade de mineração (TH/s): <span id="speed-val" style="color:var(--o)">1</span></div>
+      <input type="range" min="1" max="5" value="1" id="speed-slider" oninput="document.getElementById('speed-val').textContent=this.value">
+    </div>
+    <button class="mine-btn" id="mine-btn" onclick="startMining()">⛏ MINERAR BLOCO</button>
+    <div id="mine-result" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Rápido</div>
+    <div id="quiz-s0"></div>
+    <div id="quiz-s0-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  renderQuiz('quiz-s0', [
+    {q:"O que é o 'Nonce' num bloco Bitcoin?",opts:["O valor dos fees","Um número que miners testam até encontrar hash válido","O endereço do miner","A data do bloco"],a:1},
+    {q:"Qual o tempo médio entre blocos Bitcoin?",opts:["1 minuto","5 minutos","10 minutos","1 hora"],a:2},
+    {q:"O que torna a blockchain imutável?",opts:["Encriptação das transações","Cada bloco contém o hash do bloco anterior","Os nodes guardam cópias","Os miners validam tudo"],a:1},
+  ], () => { $('quiz-s0-next').style.display = 'block'; });
+
+  G.data.txsInBlock = 0;
+  G.data.blockMined = false;
+}
+
+window.startMining = async function() {
+  if(G.data.blockMined) return;
+  const btn = $('mine-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ A minerar...';
+  const speed = parseInt($('speed-slider')?.value||1);
+  const nonceEl = $('bk-nonce'), hashEl = $('hash-disp'), txsEl = $('bk-txs');
+  const vis = $('block-vis');
+  let nonce = 0;
+  const interval = Math.max(10, 80 - speed*15);
+  const target = Math.floor(10000 + Math.random()*40000);
+
+  const mine = setInterval(() => {
+    nonce += Math.floor(Math.random()*1000*speed)+100;
+    if(nonceEl) nonceEl.textContent = nonce.toLocaleString('pt-PT');
+    const fakeHash = randHex(64);
+    if(hashEl) { hashEl.textContent = fakeHash; hashEl.className = 'hash-display'; }
+    if(nonce >= target) {
+      clearInterval(mine);
+      const validHash = '00000' + randHex(59);
+      if(hashEl) { hashEl.textContent = validHash; hashEl.className = 'hash-display valid'; }
+      if(txsEl) txsEl.textContent = Math.floor(2000+Math.random()*700);
+      if(vis) vis.className = 'block-visual mined';
+      if(btn) { btn.textContent = '✅ Bloco Minerado!'; btn.style.background='rgba(34,197,94,.15)'; btn.style.borderColor='var(--gn)'; btn.style.color='var(--gn)'; }
+      G.data.blockMined = true;
+      addXP(30);
+      const res = $('mine-result');
+      if(res) {
+        res.style.display = 'block';
+        res.innerHTML = `<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+          🎉 <strong>Bloco #880001 minerado!</strong> Nonce encontrado após ${nonce.toLocaleString('pt-PT')} tentativas. O hash começa com "00000" — cumpre a dificuldade da rede. Este bloco será propagado para todos os nodes Bitcoin em ~12 segundos.
+        </div>`;
+      }
+    }
+  }, interval);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 1: TRANSAÇÕES
+// ══════════════════════════════════════════════════════════════════
+function s1() {
+  const c = $('stage-content');
+  const txs = [
+    {id:'tx1',from:'bc1q...Satoshi',to:'bc1q...Vitalik',amount:'0.05',fee:'12 sat/vB',size:'250 vB'},
+    {id:'tx2',from:'1ABC...xK9',to:'3XYZ...pM2',amount:'0.12',fee:'8 sat/vB',size:'141 vB'},
+    {id:'tx3',from:'bc1p...rT7',to:'bc1q...wN5',amount:'0.30',fee:'25 sat/vB',size:'340 vB'},
+    {id:'tx4',from:'1DEF...zL4',to:'bc1q...yO8',amount:'0.008',fee:'5 sat/vB',size:'200 vB'},
+  ];
+
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">💸</span> Etapa 2 — Anatomia de uma Transação</div>
+    <div class="card-body">
+      Uma transação Bitcoin não é um simples "envio de dinheiro". É uma mensagem criptograficamente assinada que destrói UTXOs antigos e cria UTXOs novos.
+    </div>
+    <div style="margin:12px 0;background:#050505;border:1px solid var(--bd);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px;font-weight:700">Estrutura de uma Transação Bitcoin</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">📥</div>
+          <div style="font-size:10px;color:var(--rd);font-weight:700;margin-top:3px">INPUTS</div>
+          <div style="font-size:9px;color:var(--m)">UTXOs gastos<br>+ assinatura</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">⚙</div>
+          <div style="font-size:10px;color:var(--o);font-weight:700;margin-top:3px">SCRIPT</div>
+          <div style="font-size:9px;color:var(--m)">Validação<br>criptográfica</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">📤</div>
+          <div style="font-size:10px;color:var(--gn);font-weight:700;margin-top:3px">OUTPUTS</div>
+          <div style="font-size:9px;color:var(--m)">Novos UTXOs<br>+ troco</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(102,102,102,.08);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">⛏</div>
+          <div style="font-size:10px;color:var(--m);font-weight:700;margin-top:3px">FEE</div>
+          <div style="font-size:9px;color:var(--m)">Inputs - Outputs<br>= fee ao miner</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      💡 <strong>Fee não é um output explícito.</strong> O miner recebe a diferença entre a soma dos inputs e a soma dos outputs. Se enviares 0.10 BTC e o destinatário receber 0.098 BTC, o miner recebe 0.002 BTC automaticamente.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Constrói a tua Transação</div>
+    <div class="card-body" style="margin-bottom:12px">Tens 0.50 BTC disponível. Envia 0.20 BTC para um amigo. Define o fee rate:</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--m);margin-bottom:4px">Fee Rate: <span id="tx-fee-val" style="color:var(--o);font-weight:700">10</span> sat/vByte</div>
+      <input type="range" min="1" max="50" value="10" id="tx-fee-slider" oninput="updateTxCalc()">
+    </div>
+    <div id="tx-calc" style="background:#080808;border:1px solid var(--bd);border-radius:9px;padding:12px;font-size:12px;font-family:monospace">
+    </div>
+    <div style="margin-top:10px;text-align:right">
+      <button class="btn" onclick="broadcastTx()" id="broadcast-btn">📡 Transmitir para Mempool</button>
+    </div>
+    <div id="broadcast-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s1"></div>
+    <div id="quiz-s1-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  updateTxCalc();
+  renderQuiz('quiz-s1', [
+    {q:"Como é calculada a fee de uma transação?",opts:["É um campo específico na tx","Inputs - Outputs = Fee para o miner","Percentagem do valor enviado","Define-se no endereço de destino"],a:1},
+    {q:"O que é o 'troco' numa transação Bitcoin?",opts:["Uma taxa extra para o miner","O valor que sobra e volta à tua própria carteira","Um erro na transação","O valor total enviado"],a:1},
+  ], () => { $('quiz-s1-next').style.display = 'block'; });
+}
+
+window.updateTxCalc = function() {
+  const fee = parseInt($('tx-fee-slider')?.value||10);
+  const fv = $('tx-fee-val'); if(fv) fv.textContent = fee;
+  const size = 250;
+  const feeSats = fee * size;
+  const feeBtc = feeSats / 1e8;
+  const change = 0.50 - 0.20 - feeBtc;
+  const feeEur = (feeBtc * 75000).toFixed(2);
+  const conf = fee > 20 ? '~10 min (próximo bloco)' : fee > 8 ? '~30 min (~3 blocos)' : '~1-3 horas (+6 blocos)';
+  const calc = $('tx-calc');
+  if(calc) calc.innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center">
+      <span style="color:var(--m)">Input:</span><span style="color:var(--rd)">0.50000000 BTC</span>
+      <span style="color:var(--m)">Enviado:</span><span style="color:var(--gn)">0.20000000 BTC</span>
+      <span style="color:var(--m)">Troco:</span><span style="color:var(--bl)">${change.toFixed(8)} BTC</span>
+      <span style="color:var(--m)">Fee:</span><span style="color:var(--o)">${feeSats.toLocaleString('pt-PT')} sats ≈ €${feeEur}</span>
+      <span style="color:var(--m)">Tamanho:</span><span>${size} vBytes</span>
+      <span style="color:var(--m)">Confirmação:</span><span style="color:${fee>20?'var(--gn)':fee>8?'var(--o)':'var(--rd)'}">${conf}</span>
+    </div>`;
+};
+
+window.broadcastTx = function() {
+  const btn = $('broadcast-btn'); if(btn) { btn.disabled=true; btn.textContent='📡 A transmitir...'; }
+  setTimeout(() => {
+    const res = $('broadcast-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+        ✅ Transação transmitida! TXID: <span style="font-family:monospace">${randHex(64)}</span><br>
+        <span style="color:var(--m)">A transação está agora no mempool à espera de ser incluída num bloco.</span>
+      </div>`;
+    }
+    if(btn) { btn.textContent='✅ Transmitida!'; }
+    addXP(20);
+  }, 1500);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 2: MEMPOOL
+// ══════════════════════════════════════════════════════════════════
+function s2() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🏊</span> Etapa 3 — O Mempool</div>
+    <div class="card-body">
+      O <strong style="color:var(--o)">mempool</strong> (memory pool) é a sala de espera das transações. Cada node da rede tem o seu próprio mempool com as transações que ainda não foram confirmadas num bloco.
+    </div>
+    <div style="margin:12px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">📡</div>
+          <div style="font-size:10px;font-weight:700;color:var(--o);margin-top:4px">Transmites a TX</div>
+          <div style="font-size:9px;color:var(--m)">Propagada para todos os nodes</div>
+        </div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">🏊</div>
+          <div style="font-size:10px;font-weight:700;color:var(--bl);margin-top:4px">Entra no Mempool</div>
+          <div style="font-size:9px;color:var(--m)">Aguarda ser seleccionada</div>
+        </div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">⛏</div>
+          <div style="font-size:10px;font-weight:700;color:var(--gn);margin-top:4px">Miner selecciona</div>
+          <div style="font-size:9px;color:var(--m)">Prioridade por fee rate</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      ⚡ <strong>RBF (Replace-By-Fee):</strong> Se a tua transação está presa no mempool com fee baixo, podes enviá-la novamente com fee mais alto. O node substitui a versão anterior se o novo fee for pelo menos 10% superior.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Jogo: Selecciona Transações como Miner</div>
+    <div class="card-body" style="margin-bottom:10px">
+      Tens espaço para <strong style="color:var(--o)">4 transações</strong> no bloco. Selecciona as mais lucrativas (maior fee rate):
+    </div>
+    <div class="mempool-area" id="mp-area">
+    </div>
+    <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="font-size:11px;color:var(--m)">Seleccionadas: <span id="mp-sel" style="color:var(--o);font-weight:700">0</span>/4 · Fee total: <span id="mp-fee" style="color:var(--gn);font-weight:700">0</span> sats</div>
+      <button class="btn" id="mp-mine-btn" onclick="mineMempool()" disabled>⛏ Minar Bloco</button>
+    </div>
+    <div id="mp-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s2"></div>
+    <div id="quiz-s2-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  // populate mempool
+  const txData = [
+    {id:'a',label:'TX-A',sat:45,sats:11250},
+    {id:'b',label:'TX-B',sat:8,sats:2000},
+    {id:'c',label:'TX-C',sat:32,sats:8000},
+    {id:'d',label:'TX-D',sat:3,sats:750},
+    {id:'e',label:'TX-E',sat:67,sats:16750},
+    {id:'f',label:'TX-F',sat:15,sats:3750},
+    {id:'g',label:'TX-G',sat:55,sats:13750},
+    {id:'h',label:'TX-H',sat:6,sats:1500},
+  ];
+  G.data.mpTxs = txData;
+  G.data.mpSel = new Set();
+
+  const area = $('mp-area');
+  txData.forEach(tx => {
+    const cls = tx.sat > 40 ? 'high' : tx.sat > 15 ? 'med' : 'low';
+    const el = document.createElement('div');
+    el.className = `mempool-tx ${cls}`;
+    el.id = `mp-tx-${tx.id}`;
+    el.style.animationDelay = `${Math.random()*2}s`;
+    el.innerHTML = `${tx.label} <span style="font-size:9px">${tx.sat} sat/vB</span>`;
+    el.onclick = () => toggleMpTx(tx.id, tx.sats);
+    area.appendChild(el);
+  });
+
+  renderQuiz('quiz-s2', [
+    {q:"O que é o mempool?",opts:["Um bloco especial do Bitcoin","Área de espera de txs não confirmadas","A recompensa do miner","O hash do bloco"],a:1},
+    {q:"Como os miners escolhem transações do mempool?",opts:["Por ordem de chegada (FIFO)","Por valor total da transação","Por fee rate (sat/vByte) mais alto","Aleatoriamente"],a:2},
+    {q:"O que é RBF (Replace-By-Fee)?",opts:["Um tipo de endereço Bitcoin","Substituir tx pendente por versão com fee mais alto","Uma forma de cancelar transações","O protocolo Lightning"],a:1},
+  ], () => { $('quiz-s2-next').style.display = 'block'; });
+}
+
+window.toggleMpTx = function(id, sats) {
+  const sel = G.data.mpSel;
+  const el = $(`mp-tx-${id}`);
+  if(sel.has(id)) {
+    sel.delete(id);
+    el.style.transform = '';
+    el.style.opacity = '1';
+  } else {
+    if(sel.size >= 4) return;
+    sel.add(id);
+    el.style.transform = 'scale(1.1)';
+    el.style.opacity = '.7';
+    el.style.filter = 'brightness(1.3)';
+  }
+  const totalFee = [...sel].reduce((s,id) => s + G.data.mpTxs.find(t=>t.id===id).sats, 0);
+  const selEl = $('mp-sel'); if(selEl) selEl.textContent = sel.size;
+  const feeEl = $('mp-fee'); if(feeEl) feeEl.textContent = totalFee.toLocaleString('pt-PT');
+  const btn = $('mp-mine-btn'); if(btn) btn.disabled = sel.size === 0;
+};
+
+window.mineMempool = function() {
+  const sel = G.data.mpSel;
+  const txData = G.data.mpTxs;
+  const selTxs = [...sel].map(id => txData.find(t=>t.id===id));
+  const totalFee = selTxs.reduce((s,t)=>s+t.sats,0);
+  const bestPossible = [...txData].sort((a,b)=>b.sats-a.sats).slice(0,4).reduce((s,t)=>s+t.sats,0);
+  const efficiency = Math.round((totalFee/bestPossible)*100);
+  const res = $('mp-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.2);border-radius:9px;padding:12px;font-size:11px">
+      <div style="font-weight:700;color:var(--o);margin-bottom:6px">⛏ Bloco minerado com ${selTxs.length} transações!</div>
+      <div>Fee total recolhido: <strong style="color:var(--gn)">${totalFee.toLocaleString('pt-PT')} sats</strong></div>
+      <div>Eficiência: <strong style="color:${efficiency>80?'var(--gn)':'var(--yl)'}">${efficiency}%</strong> ${efficiency===100?'🏆 Perfeito!':efficiency>80?'👍 Muito bom!':'💡 Dica: selecciona os de maior sat/vB'}</div>
+    </div>`;
+    addXP(20);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 3: NODES
+// ══════════════════════════════════════════════════════════════════
+function s3() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🌐</span> Etapa 4 — Nodes: O Coração do Bitcoin</div>
+    <div class="card-body">
+      Um <strong style="color:var(--o)">node (nó)</strong> é um computador que corre o software Bitcoin Core e mantém uma cópia completa de toda a blockchain — desde o bloco genesis (2009) até hoje.<br><br>
+      <strong style="color:var(--t)">Os nodes são a verdadeira soberania do Bitcoin.</strong> Não confiam em ninguém — verificam tudo por si próprios.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:6px">🖥 Full Node</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          ✅ Descarrega toda a blockchain (~600 GB)<br>
+          ✅ Valida cada transação e bloco<br>
+          ✅ Não confia em nenhum servidor<br>
+          ✅ Garante soberania total<br>
+          ⚠ Requer espaço em disco
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">📦 Pruned Node</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          ✅ Valida toda a blockchain na íntegra<br>
+          ✅ Guarda apenas blocos recentes (~5 GB)<br>
+          ✅ Mesma segurança que full node<br>
+          ✅ Ideal para hardware doméstico<br>
+          ℹ Não partilha blocos antigos
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🛡 <strong>Regras que os nodes validam em cada bloco:</strong><br>
+      • Hash cumpre a dificuldade alvo · Transação coinbase não cria BTC a mais · Todos os inputs existem e não foram gastos · Assinaturas criptográficas são válidas · Tamanho do bloco dentro dos limites · Timestamp correcto
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula a Validação de um Bloco</div>
+    <div class="card-body" style="margin-bottom:12px">
+      Clica em cada node para activar a validação. Todos os nodes têm de concordar:
+    </div>
+    <div class="node-grid" id="node-grid">
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <div style="font-size:12px;color:var(--m)" id="node-status">Clica nos nodes para validar o bloco...</div>
+    </div>
+    <div id="node-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s3"></div>
+    <div id="quiz-s3-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  // nodes
+  const nodes = [
+    {id:'n0',name:'Node Lisboa',flag:'🇵🇹'},
+    {id:'n1',name:'Node Berlim',flag:'🇩🇪'},
+    {id:'n2',name:'Node Miami',flag:'🇺🇸'},
+    {id:'n3',name:'Node Tóquio',flag:'🇯🇵'},
+    {id:'n4',name:'Node São Paulo',flag:'🇧🇷'},
+    {id:'n5',name:'Node Sydney',flag:'🇦🇺'},
+  ];
+  G.data.nodesValidated = new Set();
+  const grid = $('node-grid');
+  nodes.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'node-item';
+    el.id = `ni-${n.id}`;
+    el.innerHTML = `<div style="font-size:20px;margin-bottom:4px">${n.flag}</div><div style="font-size:10px;font-weight:700">${n.name}</div><div style="font-size:9px;color:var(--m);margin-top:3px" id="nst-${n.id}">Aguarda...</div>`;
+    el.onclick = () => validateNode(n.id);
+    grid.appendChild(el);
+  });
+
+  renderQuiz('quiz-s3', [
+    {q:"Quantas cópias da blockchain existem (aproximadamente)?",opts:["1 cópia central","Centenas","15.000-20.000 nodes públicos","Apenas os miners"],a:2},
+    {q:"Qual a principal função de um node Bitcoin?",opts:["Minerar novos blocos","Validar todas as transações e manter cópia da blockchain","Guardar as chaves privadas","Gerir o mempool central"],a:1},
+    {q:"Um pruned node é menos seguro que um full node?",opts:["Sim, pois não tem todos os dados","Não, valida igualmente toda a blockchain","Sim, não pode verificar transações antigas","Depende da versão do Bitcoin Core"],a:1},
+  ], () => { $('quiz-s3-next').style.display = 'block'; });
+}
+
+window.validateNode = async function(id) {
+  const el = $(`ni-${id}`); const st = $(`nst-${id}`);
+  if(!el || G.data.nodesValidated.has(id)) return;
+  el.className = 'node-item validating';
+  if(st) st.textContent = 'A validar...';
+  await sleep(800 + Math.random()*600);
+  el.className = 'node-item valid';
+  if(st) { st.textContent = '✅ Válido'; st.style.color='var(--gn)'; }
+  G.data.nodesValidated.add(id);
+  addXP(5);
+  const statusEl = $('node-status');
+  if(statusEl) statusEl.textContent = `${G.data.nodesValidated.size}/6 nodes validaram o bloco`;
+  if(G.data.nodesValidated.size === 6) {
+    const res = $('node-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+        🌐 <strong>Consenso alcançado!</strong> Todos os 6 nodes concordam que o bloco é válido. Em ~12 segundos, este bloco foi propagado para os 15.000+ nodes da rede Bitcoin worldwide.
+      </div>`;
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 4: UTXO
+// ══════════════════════════════════════════════════════════════════
+function s4() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🪙</span> Etapa 5 — UTXO: A Nota de Banco do Bitcoin</div>
+    <div class="card-body">
+      <strong style="color:var(--o)">UTXO = Unspent Transaction Output</strong> (saída de transação não gasta).<br><br>
+      No Bitcoin não existem "saldos" como num banco. O teu "saldo" é a soma de todos os UTXOs que as tuas chaves privadas controlam. É exactamente como notas físicas na tua carteira.
+    </div>
+    <div class="highlight">
+      💡 <strong>Analogia:</strong> Imagina que tens na carteira: uma nota de €50, uma de €20 e uma de €5. O teu "saldo" é €75. Se quiseres pagar €30, tens de usar a nota de €50 e receber €20 de troco. Os UTXOs funcionam exactamente assim — não podes "partir" um UTXO, tens de o gastar inteiro e receber troco.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:8px">Propriedades de um UTXO:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">📋 TXID — ID da transação de origem</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">🔢 Vout — índice do output na tx</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">💰 Valor — em satoshis</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">🔐 Script — condição para gastar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Jogo UTXO: Coin Control</div>
+    <div class="card-body" style="margin-bottom:12px">
+      Tens estes UTXOs na carteira. Selecciona os necessários para pagar <strong style="color:var(--o)">0.15 BTC</strong> com o menor troco possível:
+    </div>
+    <div id="utxo-wallet" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <div style="background:#050505;border:1px solid var(--bd);border-radius:9px;padding:10px 12px;font-size:11px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--m)">Seleccionado:</span><span id="utxo-sel-val" style="color:var(--o);font-weight:700">0.00000000 BTC</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--m)">A enviar:</span><span style="color:var(--gn)">0.15000000 BTC</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--m)">Troco estimado:</span><span id="utxo-change-val" style="color:var(--bl);font-weight:700">—</span>
+      </div>
+    </div>
+    <button class="btn" id="utxo-send-btn" onclick="sendUtxo()" disabled>Construir Transação</button>
+    <div id="utxo-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s4"></div>
+    <div id="quiz-s4-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const utxos = [
+    {id:'u0',btc:0.05,label:'UTXO A',txid:'a1b2c3...'},
+    {id:'u1',btc:0.08,label:'UTXO B',txid:'d4e5f6...'},
+    {id:'u2',btc:0.12,label:'UTXO C',txid:'g7h8i9...'},
+    {id:'u3',btc:0.20,label:'UTXO D',txid:'j1k2l3...'},
+    {id:'u4',btc:0.03,label:'UTXO E',txid:'m4n5o6...'},
+  ];
+  G.data.utxos = utxos;
+  G.data.utxoSel = new Set();
+  const wallet = $('utxo-wallet');
+  utxos.forEach(u => {
+    const el = document.createElement('div');
+    el.className = 'utxo-box';
+    el.id = `ub-${u.id}`;
+    el.innerHTML = `<div style="font-size:20px">🪙</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${u.label}</div><div style="font-size:10px;color:var(--m);font-family:monospace">${u.txid}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--o)">${u.btc.toFixed(8)}</div><div style="font-size:9px;color:var(--m)">BTC</div></div>`;
+    el.onclick = () => toggleUtxo(u.id, u.btc);
+    wallet.appendChild(el);
+  });
+
+  renderQuiz('quiz-s4', [
+    {q:"O que é um UTXO?",opts:["Um tipo de transação Lightning","Uma saída de transação não gasta — 'nota de banco' do Bitcoin","Um endereço Bitcoin especial","A chave pública da carteira"],a:1},
+    {q:"O que é 'Coin Control' (controlo de UTXOs)?",opts:["Controlar o preço do Bitcoin","Escolher manualmente quais UTXOs usar como inputs","Gerir a carteira hardware","Definir o fee rate"],a:1},
+    {q:"Podes 'partir' um UTXO ao metade?",opts:["Sim, com SegWit","Não — um UTXO é gasto inteiro, o troco vem como novo UTXO","Sim, se tiveres carteira multisig","Apenas com Lightning"],a:1},
+  ], () => { $('quiz-s4-next').style.display = 'block'; });
+}
+
+window.toggleUtxo = function(id, btc) {
+  const sel = G.data.utxoSel;
+  const el = $(`ub-${id}`);
+  if(sel.has(id)) {sel.delete(id);el.className='utxo-box';} 
+  else {sel.add(id);el.className='utxo-box selected';}
+  const total = [...sel].reduce((s,id)=>s+G.data.utxos.find(u=>u.id===id).btc,0);
+  const sv = $('utxo-sel-val'); if(sv) sv.textContent = total.toFixed(8)+' BTC';
+  const cv = $('utxo-change-val');
+  if(total > 0.15) {
+    const change = total - 0.15 - 0.0001;
+    if(cv) cv.textContent = (change>0?change:0).toFixed(8)+' BTC';
+  } else {
+    if(cv) cv.textContent = total>=0.15?'0.00000000 BTC':'Insuficiente';
+  }
+  const btn = $('utxo-send-btn'); if(btn) btn.disabled = total < 0.15;
+};
+
+window.sendUtxo = function() {
+  const sel = G.data.utxoSel;
+  const total = [...sel].reduce((s,id)=>s+G.data.utxos.find(u=>u.id===id).btc,0);
+  const change = +(total - 0.15 - 0.0001).toFixed(8);
+  sel.forEach(id => {const el=$(`ub-${id}`);if(el)el.className='utxo-box spent';});
+  const res = $('utxo-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px">
+      <div style="color:var(--gn);font-weight:700;margin-bottom:6px">✅ Transação Construída!</div>
+      <div>Inputs gastos: <strong>${sel.size} UTXO(s)</strong> totalizando ${total.toFixed(8)} BTC</div>
+      <div>Output principal: <strong>0.15000000 BTC</strong> → destinatário</div>
+      ${change>0?`<div>Output troco: <strong style="color:var(--bl)">${change} BTC</strong> → de volta para a tua carteira</div>`:''}
+      <div>Fee: <strong style="color:var(--o)">0.00010000 BTC</strong> → miner</div>
+    </div>`;
+    addXP(20);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 5: CONFIRMAÇÕES
+// ══════════════════════════════════════════════════════════════════
+function s5() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">✅</span> Etapa 6 — 6 Confirmações: A Regra de Ouro</div>
+    <div class="card-body">
+      Quando a tua transação é incluída num bloco, tem <strong style="color:var(--o)">1 confirmação</strong>. Cada bloco subsequente adiciona mais uma confirmação. A regra standard da indústria é aguardar <strong style="color:var(--o)">6 confirmações</strong> (~1 hora) para considerar uma transação irreversível.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:11px;color:var(--m2);margin-bottom:8px;font-weight:700">Nível de segurança por número de confirmações:</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${[['0','Mempool','🏊 Pendente — pode ser substituída','var(--m)'],['1','~10 min','⚠ Baixa segurança — apenas para valores pequenos','var(--yl)'],['2-3','~20-30 min','🟠 Segurança moderada — pequenas compras','var(--o)'],['6','~1 hora','✅ Standard da indústria — seguro para maioria dos casos','var(--gn)'],['100+','~16 horas','🔒 Máxima segurança — mineração (coinbase)','var(--bl)']].map(([n,t,d,col])=>`
+          <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 12px;display:grid;grid-template-columns:40px 80px 1fr;gap:8px;align-items:center">
+            <div style="font-size:14px;font-weight:800;color:${col};font-family:monospace">${n}</div>
+            <div style="font-size:10px;color:var(--m)">${t}</div>
+            <div style="font-size:10px;color:var(--m2)">${d}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="highlight">
+      🔗 <strong>Porquê 6 confirmações?</strong> Para reverter uma transação com 6 confirmações, um atacante precisaria de refazer 6 blocos consecutivos mais rápido que toda a rede honesta. Com o hashrate actual (~895 EH/s), isto seria astronomicamente dispendioso — requerendo mais de 50% de todo o hashrate mundial.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula as 6 Confirmações</div>
+    <div class="card-body" style="margin-bottom:12px">A tua transação foi incluída no bloco #880001. Aguarda as confirmações:</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px" id="conf-blocks">
+      ${[...Array(6)].map((_,i)=>`<div class="confirm-block" id="cb-${i}"><div style="font-size:18px">⬜</div><div style="font-size:9px;color:var(--m);margin-top:4px">${i===0?'Bloco TX':'Bloco '+(i+1)}</div><div style="font-size:10px;font-weight:700;margin-top:2px" id="cbs-${i}">—</div></div>`).join('')}
+    </div>
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:700" id="conf-status">A aguardar confirmações...</div>
+      <div style="font-size:11px;color:var(--m);margin-top:4px" id="conf-sub">Cada bloco demora ~10 minutos</div>
+    </div>
+    <button class="btn" id="conf-btn" onclick="startConfirmations()" style="width:100%">⏩ Simular Confirmações (acelerado)</button>
+    <div id="conf-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s5"></div>
+    <div id="quiz-s5-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  renderQuiz('quiz-s5', [
+    {q:"Porquê esperar 6 confirmações para transações de alto valor?",opts:["É um requisito do Bitcoin Core","Torna a reversão computacionalmente proibitiva","Para pagar menos fees","É o limite do mempool"],a:1},
+    {q:"O que significa uma transação com 0 confirmações?",opts:["A transação falhou","Ainda está no mempool — não está na blockchain","Foi confirmada instantaneamente","Tem fee zero"],a:1},
+    {q:"Quanto tempo demoram 6 confirmações em média?",opts:["6 minutos","10 minutos","~1 hora (6 x 10 min)","6 horas"],a:2},
+  ], () => { $('quiz-s5-next').style.display = 'block'; });
+}
+
+window.startConfirmations = async function() {
+  const btn = $('conf-btn'); if(btn) btn.disabled=true;
+  const statusEl = $('conf-status'), subEl = $('conf-sub');
+  const blockHashes = [randHex(64),randHex(64),randHex(64),randHex(64),randHex(64),randHex(64)];
+  for(let i=0;i<6;i++){
+    await sleep(700);
+    const cb = $(`cb-${i}`);
+    if(cb) {
+      cb.className = i === 5 ? 'confirm-block confirmed' : 'confirm-block confirmed';
+      cb.innerHTML = `<div style="font-size:18px">🟩</div><div style="font-size:9px;color:var(--gn);margin-top:4px">${i===0?'Bloco TX':'Bloco '+(i+1)}</div><div style="font-size:9px;font-family:monospace;color:var(--m);margin-top:2px" id="cbs-${i}">${blockHashes[i].slice(0,8)}...</div>`;
+    }
+    if(statusEl) statusEl.textContent = `${i+1} Confirmação${i>0?'s':''} ✅`;
+    if(subEl) subEl.textContent = i<5?`${5-i} confirmação(ões) em falta...`:'6 confirmações alcançadas!';
+    addXP(5);
+  }
+  const res = $('conf-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px;color:var(--gn)">
+      🔒 <strong>Transação consolidada com 6 confirmações!</strong> Esta transação está agora gravada permanentemente na blockchain Bitcoin e é considerada irreversível pela grande maioria da indústria. Bem-vindo à imutabilidade.
+    </div>`;
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 6: ENDEREÇOS
+// ══════════════════════════════════════════════════════════════════
+function s6() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">📬</span> Etapa 7 — Tipos de Endereços Bitcoin</div>
+    <div class="card-body">
+      Um endereço Bitcoin é derivado da tua chave pública através de funções criptográficas. Existem vários formatos — cada um com diferentes características de privacidade, eficiência e compatibilidade.
+    </div>
+    <div style="font-size:11px;color:var(--m);margin:10px 0 6px;font-weight:700">Clica em cada tipo para saber mais:</div>
+    <div id="addr-list"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">⚡</span> Lightning Network</div>
+    <div class="card-body">
+      A <strong style="color:var(--o)">Lightning Network</strong> é uma segunda camada construída sobre o Bitcoin. Em vez de registar cada pagamento na blockchain, os utilizadores abrem um canal de pagamento entre si.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--yl);margin-bottom:6px">⚡ Lightning Address</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.6">
+          Formato: <span style="font-family:monospace;color:var(--t)">utilizador@dominio.com</span><br>
+          Ex: <span style="font-family:monospace;color:var(--yl)">jonathan@bitcoinacademyclub.com</span><br><br>
+          ✅ Fácil de memorizar<br>
+          ✅ Pagamentos instantâneos<br>
+          ✅ Sem endereço on-chain visível<br>
+          ⚠ Requer servidor LNURL
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">🧾 BOLT11 Invoice</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.6">
+          Formato: <span style="font-family:monospace;color:var(--t)">lnbc...</span><br><br>
+          ✅ Standard Lightning<br>
+          ✅ Contém valor e descrição<br>
+          ✅ Expira ao fim de X horas<br>
+          ⚠ Único uso por invoice
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🛤 <strong>Derivação HD (BIP32/44/84):</strong> Uma única seed phrase gera uma árvore hierárquica infinita de endereços. O caminho <code style="font-family:monospace;color:var(--o)">m/84'/0'/0'/0/0</code> gera o primeiro endereço SegWit nativo. Nunca reutilizes endereços — cada recepção deve usar um endereço novo para proteger a tua privacidade.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s6"></div>
+    <div id="quiz-s6-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const addrTypes = [
+    {prefix:'1',name:'P2PKH — Legacy',color:'var(--m)','desc':'O formato original do Bitcoin (2009). Começa sempre por "1". Funciona em todo o lado mas as transações são maiores (mais fee). Menos privacidade. Evitar para uso diário.','example':'1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf...','fee':'Alto'},
+    {prefix:'3',name:'P2SH — SegWit Compatível',color:'var(--bl)','desc':'Permite SegWit de forma compatível com wallets antigas. Começa por "3". Bom equilíbrio entre compatibilidade e eficiência. Também usado para multisig.','example':'3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy','fee':'Médio'},
+    {prefix:'bc1q',name:'P2WPKH — Native SegWit (Bech32)',color:'var(--gn)','desc':'O formato SegWit nativo. Começa por "bc1q". Transações ~40% mais baratas que Legacy. Recomendado para uso diário em 2025. Máxima eficiência on-chain.','example':'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh','fee':'Baixo ✅'},
+    {prefix:'bc1p',name:'P2TR — Taproot (Bech32m)',color:'var(--pu)','desc':'O formato mais moderno. Começa por "bc1p". Máxima privacidade (txs multisig parecem iguais a txs normais), scripts mais eficientes, base do Lightning futuro.','example':'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq...','fee':'Baixo ✅✅'},
+  ];
+
+  G.data.selectedAddr = null;
+  const list = $('addr-list');
+  addrTypes.forEach((a,i) => {
+    const el = document.createElement('div');
+    el.className = 'addr-type';
+    el.id = `at-${i}`;
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span class="addr-prefix" style="background:${a.color}18;color:${a.color}">${a.prefix}</span>
+      <span style="font-size:12px;font-weight:700">${a.name}</span>
+      <span class="tag" style="background:${a.fee.includes('Alto')?'rgba(239,68,68,.1)':a.fee.includes('Médio')?'rgba(234,179,8,.1)':'rgba(34,197,94,.1)';};color:${a.fee.includes('Alto')?'var(--rd)':a.fee.includes('Médio')?'var(--yl)':'var(--gn)'}">${a.fee}</span>
+    </div>
+    <div style="font-size:10px;color:var(--m);display:none" id="ad-desc-${i}">${a.desc}<br><span style="font-family:monospace;color:${a.color};font-size:9px;word-break:break-all">${a.example}</span></div>`;
+    el.onclick = () => {
+      document.querySelectorAll('.addr-type').forEach((x,j) => {
+        x.className='addr-type';
+        const d = $(`ad-desc-${j}`); if(d) d.style.display='none';
+      });
+      el.className='addr-type active';
+      const desc = $(`ad-desc-${i}`); if(desc) desc.style.display='block';
+      addXP(5);
+    };
+    list.appendChild(el);
+  });
+
+  renderQuiz('quiz-s6', [
+    {q:"Qual o formato de endereço Bitcoin recomendado para uso diário em 2025?",opts:["Legacy (começa por 1)","P2SH (começa por 3)","Native SegWit (bc1q)","Qualquer um é igual"],a:2},
+    {q:"Uma seed phrase gera quantos endereços Bitcoin?",opts:["1 fixo","Máximo 100","Infinitos — árvore HD derivada deterministicamente","Depende da carteira"],a:2},
+    {q:"Por que não deves reutilizar endereços Bitcoin?",opts:["Técnicamente impossível","Aumenta os fees","Reduz privacidade — expõe o historial de todas as transações","Não há problema nenhum"],a:2},
+  ], () => { $('quiz-s6-next').style.display = 'block'; });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 7: CARTEIRAS
+// ══════════════════════════════════════════════════════════════════
+function s7() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🔐</span> Etapa 8 — Tipos de Carteira Bitcoin</div>
+    <div class="card-body">
+      Uma "carteira" Bitcoin não guarda Bitcoin — guarda <strong style="color:var(--o)">chaves privadas</strong>. O Bitcoin existe sempre na blockchain; a carteira é o que te permite assinar transações.
+    </div>
+    <div class="highlight" style="background:rgba(239,68,68,.06);border-left-color:var(--rd)">
+      ⚠ <strong>Regra Fundamental BAC:</strong> Para Bitcoin, usa EXCLUSIVAMENTE software e hardware open source auditado. Sem código aberto, não tens como verificar o que realmente acontece com as tuas chaves privadas.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Selecciona a Carteira Correcta</div>
+    <div class="card-body" style="margin-bottom:12px">Clica na carteira mais adequada para cada cenário. Descobre o porquê de cada escolha:</div>
+    <div id="wallet-list"></div>
+    <div id="wallet-feedback" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s7"></div>
+    <div id="quiz-s7-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const wallets = [
+    {icon:'⚡',name:'Blue Wallet',type:'Software — Hot Wallet',open:true,good:true,desc:'Open source, suporte Lightning e on-chain. Para valores pequenos e pagamentos diários. Não uses para guardar poupanças.'},
+    {icon:'🐦',name:'Sparrow Wallet',type:'Software — Desktop',open:true,good:true,desc:'Melhor carteira desktop Bitcoin-only. Full UTXO control, Coin Join integrado, Tor, conexão ao teu próprio node. Open source auditado.'},
+    {icon:'❄️',name:'Coldcard Mk4',type:'Hardware — Airgap',open:true,good:true,desc:'Gold standard. Bitcoin-only. Nunca conecta por USB a computadores. PSBTs via NFC/SD. Secure element. Referência máxima de segurança.'},
+    {icon:'🌱',name:'SeedSigner',type:'Hardware — DIY Airgap',open:true,good:true,desc:'Open source total. Raspberry Pi Zero. Stateless (não guarda a seed). Airgap via QR code. Podes construir o teu próprio.'},
+    {icon:'📱',name:'Ledger Nano X',type:'Hardware — USB/Bluetooth',open:false,good:false,desc:'EVITAR. Firmware proprietário. Ligação obrigatória por USB ou Bluetooth durante assinatura. 2023: implementou "Ledger Recover" que fragmenta e envia a tua seed para servidores externos.'},
+    {icon:'🔌',name:'Trezor Safe 3',type:'Hardware — USB',open:true,good:false,desc:'Open source mas EVITAR para Bitcoin sério. Requer ligação USB ao computador durante assinatura — superfície de ataque. Não é airgap.'},
+  ];
+
+  const list = $('wallet-list');
+  wallets.forEach((w,i) => {
+    const el = document.createElement('div');
+    el.className = `wallet-card ${w.good?'':'danger-w'}`;
+    el.id = `wc-${i}`;
+    el.innerHTML = `
+      <div style="font-size:26px;flex-shrink:0">${w.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:700">${w.name}</span>
+          <span class="tag ${w.open?'tag-green':'tag-red'}">${w.open?'Open Source':'Closed Source'}</span>
+          ${w.good?'<span class="tag tag-green">✅ Recomendado</span>':'<span class="tag tag-red">⛔ Evitar</span>'}
+        </div>
+        <div style="font-size:10px;color:var(--m)">${w.type}</div>
+        <div style="font-size:11px;color:var(--m2);margin-top:5px;display:none" id="wd-${i}">${w.desc}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      const desc = $(`wd-${i}`);
+      const showing = desc?.style.display !== 'none';
+      if(desc) desc.style.display = showing ? 'none' : 'block';
+      addXP(5);
+    };
+    list.appendChild(el);
+  });
+
+  renderQuiz('quiz-s7', [
+    {q:"Porquê usar APENAS software/hardware open source para Bitcoin?",opts:["É mais barato","Podes verificar que o código não tem backdoors ou comportamentos maliciosos","O desempenho é melhor","É exigido pela rede Bitcoin"],a:1},
+    {q:"Qual o principal problema do Ledger Nano X?",opts:["É muito caro","Firmware proprietário + Ledger Recover envia seed para servidores","Não suporta Bitcoin","Não tem ecrã"],a:1},
+    {q:"Uma hot wallet é recomendada para guardar as tuas poupanças em Bitcoin?",opts:["Sim, é conveniente","Não — hot wallets (ligadas à internet) são apenas para valores pequenos e uso diário","Só se tiveres senha forte","Depende do sistema operativo"],a:1},
+  ], () => { $('quiz-s7-next').style.display = 'block'; });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 8: ASSINATURAS CRIPTOGRÁFICAS (Cold Wallets)
+// ══════════════════════════════════════════════════════════════════
+function s8() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">✍</span> Etapa 9 — Assinaturas Criptográficas (Airgap)</div>
+    <div class="card-body">
+      Jonathan Costa — CEO da Bitcoin Academy Club — chama às cold wallets <strong style="color:var(--o)">"Assinaturas Criptográficas"</strong> porque é isso que elas fazem: assinar transações offline, sem nunca expor as chaves privadas a dispositivos conectados.
+    </div>
+    <div class="highlight" style="background:rgba(247,147,26,.06)">
+      ✍ <strong>O que é uma Assinatura Criptográfica?</strong><br>
+      Quando "assinamos" uma transação Bitcoin, usamos a nossa chave privada para criar uma prova matemática de que autorizamos o gasto de um UTXO específico. Esta prova (assinatura) pode ser verificada por qualquer node sem revelar a chave privada. É matematicamente impossível forjar.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--o);margin-bottom:8px">Airgap = Zero Conectividade Electrónica durante a Assinatura</div>
+      <div style="background:#050505;border:1px solid var(--bd);border-radius:10px;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">💻<br><span style="font-size:9px;color:var(--bl)">Computador<br>(online)</span></div>
+          <div style="font-size:10px;color:var(--m)">PSBT unsigned<br>↓↓ QR / SD ↓↓</div>
+          <div style="background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">✍<br><span style="font-size:9px;color:var(--o)">Coldcard/Seed<br>(offline)</span></div>
+          <div style="font-size:10px;color:var(--m)">PSBT signed<br>↑↑ QR / SD ↑↑</div>
+          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">📡<br><span style="font-size:9px;color:var(--gn)">Rede Bitcoin<br>(broadcast)</span></div>
+        </div>
+        <div style="font-size:10px;color:var(--m2);line-height:1.7">
+          Mesmo que o computador esteja <strong style="color:var(--rd)">completamente comprometido com malware</strong>, o atacante NUNCA pode roubar as chaves privadas — porque elas nunca saem do dispositivo airgap. O único risco seria o atacante ter acesso físico ao dispositivo.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula o Fluxo PSBT Airgap</div>
+    <div class="card-body" style="margin-bottom:12px">Clica em cada passo para executar o fluxo completo de assinatura airgap:</div>
+    <div id="psbt-steps"></div>
+    <div id="psbt-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s8"></div>
+    <div id="quiz-s8-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const steps = [
+    {icon:'💻',title:'Sparrow cria PSBT não assinada',desc:'A Sparrow Wallet constrói a transação (inputs, outputs, fee) mas não pode assinar — não tem as chaves privadas. Exporta como PSBT (Partially Signed Bitcoin Transaction).'},
+    {icon:'📱',title:'Exportar via QR animado ou SD Card',desc:'A PSBT é convertida para um QR code animado (ou copiada para SD Card). O computador mostra o QR. O dispositivo airgap NUNCA toca no computador.'},
+    {icon:'✍',title:'Coldcard / SeedSigner lê o QR offline',desc:'O dispositivo airgap lê o QR com a câmara (completamente offline). Mostra no ecrã: endereço de destino, valor, fee. O utilizador verifica SEMPRE no ecrã do dispositivo.'},
+    {icon:'🔐',title:'Assina com aprovação física',desc:'Após verificação, o utilizador aprova fisicamente no dispositivo. A assinatura criptográfica é criada com a chave privada — que NUNCA saiu do dispositivo.'},
+    {icon:'📤',title:'Exportar PSBT assinada (QR/SD)',desc:'A PSBT assinada é exportada de volta via QR animado ou SD Card para o computador. O computador recebe a transação completa e assinada.'},
+    {icon:'📡',title:'Sparrow transmite para a rede',desc:'A Sparrow importa a PSBT assinada e transmite para a rede Bitcoin. A transação chega ao mempool e será incluída num bloco. Feito — sem nunca expor as chaves privadas!'},
+  ];
+
+  G.data.psbtStep = 0;
+  const stepsEl = $('psbt-steps');
+  steps.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = `p2p-step ${i===0?'active-step':''}`;
+    el.id = `ps-step-${i}`;
+    el.innerHTML = `<div class="step-num ${i===0?'active':''}" id="ps-num-${i}">${i+1}</div><div><div style="font-size:12px;font-weight:700;margin-bottom:3px">${s.icon} ${s.title}</div><div style="font-size:11px;color:var(--m);display:${i===0?'block':'none'}" id="ps-desc-${i}">${s.desc}</div></div>`;
+    stepsEl.appendChild(el);
+  });
+
+  const advBtn = document.createElement('button');
+  advBtn.className = 'btn';
+  advBtn.style.cssText = 'width:100%;margin-top:12px';
+  advBtn.textContent = '▶ Executar Passo 1';
+  advBtn.onclick = advancePsbt;
+  stepsEl.parentNode.insertBefore(advBtn, $('psbt-result'));
+  G.data.psbtAdvBtn = advBtn;
+
+  renderQuiz('quiz-s8', [
+    {q:"O que é PSBT (Partially Signed Bitcoin Transaction)?",opts:["Uma transação Lightning","Uma transação construída mas ainda não assinada — para usar com hardware airgap","Uma transação com fee parcial","Um tipo especial de UTXO"],a:1},
+    {q:"Porquê o Trezor e Ledger não são verdadeiramente airgap?",opts:["Porque são caros","Requerem ligação USB ou Bluetooth ao computador durante a assinatura","Porque não suportam Bitcoin","O firmware não é seguro"],a:1},
+    {q:"O que deves SEMPRE verificar no ecrã do dispositivo airgap antes de assinar?",opts:["O saldo total da carteira","O endereço de destino, o valor e a fee da transação","A data e hora","O número de confirmações"],a:1},
+  ], () => { $('quiz-s8-next').style.display = 'block'; });
+}
+
+let psbtStepCurrent = 0;
+window.advancePsbt = async function() {
+  const steps = 6;
+  if(psbtStepCurrent >= steps) return;
+  const btn = G.data.psbtAdvBtn;
+  if(btn) { btn.disabled=true; btn.textContent='⏳ A executar...'; }
+  await sleep(600);
+  const stepEl = $(`ps-step-${psbtStepCurrent}`);
+  const numEl = $(`ps-num-${psbtStepCurrent}`);
+  const descEl = $(`ps-desc-${psbtStepCurrent}`);
+  if(stepEl) stepEl.className='p2p-step done-step';
+  if(numEl) { numEl.className='step-num done'; numEl.textContent='✓'; }
+  if(descEl) descEl.style.display='block';
+  addXP(10);
+  psbtStepCurrent++;
+  if(psbtStepCurrent < steps) {
+    const next = $(`ps-step-${psbtStepCurrent}`);
+    const nextNum = $(`ps-num-${psbtStepCurrent}`);
+    if(next) next.className='p2p-step active-step';
+    if(nextNum) { nextNum.className='step-num active'; }
+    if(btn) { btn.disabled=false; btn.textContent=`▶ Executar Passo ${psbtStepCurrent+1}`; }
+  } else {
+    if(btn) { btn.disabled=true; btn.textContent='✅ Fluxo Completo!'; btn.style.background='rgba(34,197,94,.15)'; btn.style.color='var(--gn)'; btn.style.border='1px solid var(--gn)'; }
+    const res = $('psbt-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px;color:var(--gn)">
+        🔒 <strong>Fluxo airgap completo!</strong> A transação foi assinada com a Coldcard/SeedSigner completamente offline e transmitida pela Sparrow. As tuas chaves privadas nunca saíram do dispositivo airgap. Esta é a soberania máxima no Bitcoin.
+      </div>`;
+    }
+  }
+};
+psbtStepCurrent = 0;
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 9: SPARROW / BLUE WALLET
+// ══════════════════════════════════════════════════════════════════
+function s9() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">💼</span> Etapa 10 — Sparrow Wallet & Blue Wallet</div>
+    <div class="card-body">
+      Chegou a hora de usares as ferramentas reais. A <strong style="color:var(--o)">Sparrow Wallet</strong> é a carteira desktop Bitcoin-only mais completa. A <strong style="color:var(--bl)">Blue Wallet</strong> é a melhor opção mobile para Lightning + on-chain.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🐦</span> Simulador Sparrow Wallet</div>
+    <div class="card-body" style="margin-bottom:10px">Simula receber e enviar uma transação na Sparrow:</div>
+    <div class="sparrow-ui">
+      <div class="sparrow-tab">
+        <button class="sparrow-tab-btn active" id="stb-recv" onclick="sparrowTab('recv',this)">Receber</button>
+        <button class="sparrow-tab-btn" id="stb-send" onclick="sparrowTab('send',this)">Enviar</button>
+        <button class="sparrow-tab-btn" id="stb-txs" onclick="sparrowTab('txs',this)">Transações</button>
+        <button class="sparrow-tab-btn" id="stb-utxo" onclick="sparrowTab('utxo',this)">UTXOs</button>
+      </div>
+      <div class="sparrow-body" id="sparrow-body">
+      </div>
+    </div>
+    <div id="sparrow-done" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:20px">📱</span> Blue Wallet — Lightning & On-Chain</div>
+    <div class="card-body" style="margin-bottom:10px">
+      A Blue Wallet suporta Lightning e Bitcoin on-chain no mesmo lugar. Para receber via Lightning, geras uma invoice BOLT11.
+    </div>
+    <div style="background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:6px">📲 Receber Lightning</div>
+          <div style="font-size:10px;color:var(--m);line-height:1.7">
+            1. Abre Blue Wallet<br>
+            2. Selecciona carteira Lightning<br>
+            3. Toca em "Receber"<br>
+            4. Define o valor (opcional)<br>
+            5. Partilha o QR code / invoice<br>
+            6. Recebido em segundos ⚡
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">📲 Enviar Lightning</div>
+          <div style="font-size:10px;color:var(--m);line-height:1.7">
+            1. Toca em "Enviar"<br>
+            2. Lê QR code da invoice<br>
+            3. Confirma valor e destino<br>
+            4. Toca em "Pagar"<br>
+            5. Confirmação instantânea ⚡<br>
+            6. Fee: fracção de satoshi
+          </div>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top:10px">
+        🔗 <strong>Blue Wallet open source:</strong> <span style="font-family:monospace;font-size:10px;color:var(--o)">github.com/BlueWallet/BlueWallet</span> — auditável, sem custódia, código verificável.
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.3s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Final antes do Ouro</div>
+    <div id="quiz-s9"></div>
+    <div id="quiz-s9-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">🥇 Etapa OURO →</button>
+    </div>
+  </div>
+  `;
+
+  sparrowTab('recv', $('stb-recv'));
+
+  renderQuiz('quiz-s9', [
+    {q:"O que diferencia a Sparrow Wallet de outras carteiras?",opts:["É a mais rápida","Suporte completo a UTXO control, Coin Join, Tor e node próprio","Tem interface mobile","Suporta altcoins"],a:1},
+    {q:"Para que serve a label (etiqueta) de um UTXO na Sparrow?",opts:["Mudar o endereço","Identificar a origem do UTXO para melhor coin control e privacidade","Definir o fee","Confirmar a transação"],a:1},
+  ], () => { $('quiz-s9-next').style.display = 'block'; });
+}
+
+window.sparrowTab = function(tab, btn) {
+  document.querySelectorAll('.sparrow-tab-btn').forEach(b => b.className='sparrow-tab-btn');
+  if(btn) btn.className='sparrow-tab-btn active';
+  const body = $('sparrow-body');
+  if(!body) return;
+  if(tab==='recv') {
+    body.innerHTML=`<div style="text-align:center">
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px">Endereço de recepção (bc1q... — Native SegWit)</div>
+      <div style="background:#050505;border:1px solid var(--bd);border-radius:8px;padding:14px;display:inline-block;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:repeat(8,16px);gap:2px">
+          ${[...Array(64)].map((_,i)=>`<div style="width:16px;height:16px;background:${Math.random()>.5?'var(--t)':'var(--bg)'}"></div>`).join('')}
+        </div>
+      </div>
+      <div style="font-family:monospace;font-size:10px;color:var(--o);word-break:break-all;max-width:300px;margin:0 auto 8px">bc1q7cy8k2u9pq5n3m4w1xz9v6ertf8ghj2lk...</div>
+      <div style="font-size:10px;color:var(--m)">Cada recepção usa um endereço novo — privacidade garantida</div>
+      <div style="margin-top:10px"><button class="btn" onclick="simulateReceive()" id="recv-btn">Simular Recepção de 0.05 BTC</button></div>
+      <div id="recv-result" style="margin-top:8px"></div>
+    </div>`;
+  } else if(tab==='send') {
+    body.innerHTML=`<div>
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px">Enviar Bitcoin</div>
+      <div style="margin-bottom:8px"><div style="font-size:10px;color:var(--m);margin-bottom:3px">Endereço de destino</div>
+      <input type="text" placeholder="bc1q... ou 1... ou 3..." style="width:100%;font-size:11px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--m);margin-bottom:3px">Valor (BTC)</div><input type="number" placeholder="0.01000000" step="0.001"></div>
+        <div><div style="font-size:10px;color:var(--m);margin-bottom:3px">Fee (sat/vB)</div><input type="number" placeholder="12" min="1" max="100"></div>
+      </div>
+      <div style="font-size:10px;color:var(--m);margin-bottom:8px">⚠ A Sparrow irá gerar uma PSBT para assinares com o teu dispositivo airgap</div>
+      <button class="btn" onclick="simulateSend()">Criar PSBT para Assinar</button>
+      <div id="send-result" style="margin-top:8px"></div>
+    </div>`;
+  } else if(tab==='txs') {
+    const txs=[{hash:randHex(8),type:'Recebido',amount:'+0.05000000',conf:'142',date:'15 Mar 2026'},{hash:randHex(8),type:'Enviado',amount:'-0.02000000',conf:'89',date:'10 Mar 2026'},{hash:randHex(8),type:'Recebido',amount:'+0.10000000',conf:'312',date:'1 Mar 2026'}];
+    body.innerHTML=`<div style="font-size:11px;color:var(--m);margin-bottom:8px">Historial de Transações</div>${txs.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#050505;border-radius:6px;margin-bottom:5px;font-size:11px"><div><div style="font-weight:600;color:${t.type==='Recebido'?'var(--gn)':'var(--rd)'}">${t.type}</div><div style="font-family:monospace;font-size:9px;color:var(--m)">${t.hash}... · ${t.conf} conf.</div></div><div style="text-align:right"><div style="font-weight:700;color:${t.type==='Recebido'?'var(--gn)':'var(--rd)'}">${t.amount} BTC</div><div style="font-size:9px;color:var(--m)">${t.date}</div></div></div>`).join('')}`;
+  } else if(tab==='utxo') {
+    body.innerHTML=`<div style="font-size:11px;color:var(--m);margin-bottom:8px">UTXOs disponíveis (Coin Control)</div>
+    <div style="font-size:10px;color:rgba(247,147,26,.7);margin-bottom:8px">💡 Na Sparrow, podes etiquetar cada UTXO para saber a sua origem — fundamental para privacidade</div>
+    ${[{amt:'0.05',label:'Recebido P2P Peach',date:'15 Mar'},{amt:'0.10',label:'Recebido P2P RoboSats',date:'1 Mar'},{amt:'0.03',label:'Troco tx anterior',date:'10 Mar'}].map(u=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#050505;border:1px solid var(--bd);border-radius:7px;padding:8px 10px;margin-bottom:5px;font-size:11px"><div><div style="font-weight:600;color:var(--o)">${u.amt} BTC</div><div style="font-size:9px;color:var(--gn)">${u.label}</div></div><div style="font-size:9px;color:var(--m)">${u.date}</div></div>`).join('')}`;
+  }
+};
+
+window.simulateReceive = function() {
+  const btn = $('recv-btn'); if(btn) btn.disabled=true;
+  setTimeout(() => {
+    const res = $('recv-result');
+    if(res) res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--gn)">✅ 0.05 BTC recebidos! Aguarda 6 confirmações para usar.</div>`;
+    addXP(15);
+  }, 1000);
+};
+
+window.simulateSend = function() {
+  const res = $('send-result');
+  setTimeout(() => {
+    if(res) res.innerHTML=`<div style="background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.2);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--o)">✅ PSBT gerada! Exporta para a tua Assinatura Criptográfica (Coldcard/SeedSigner) para assinar.</div>`;
+    addXP(15);
+  }, 800);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 10: P2P GOLD 🥇
+// ══════════════════════════════════════════════════════════════════
+function s10() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="gold-card slide">
+    <div class="gold-title">🥇 Etapa OURO — Compra P2P sem KYC</div>
+    <div style="font-size:12px;color:var(--m2);line-height:1.8;margin-top:8px">
+      Chegaste ao estágio final — e o mais importante para a soberania financeira completa. A única forma de adquirir Bitcoin sem ligar a tua identidade aos teus UTXOs é através de <strong style="color:var(--o)">trocas P2P (peer-to-peer)</strong>.
+    </div>
+    <div class="highlight" style="margin-top:10px">
+      🔑 <strong>Porquê P2P sem KYC?</strong><br>
+      Quando compras Bitcoin numa exchange (Binance, Coinbase...) com KYC, a tua identidade fica permanentemente ligada aos teus UTXOs nas bases de dados dessas empresas. Em caso de breach de dados (já aconteceu com a Binance, Ledger, FTX, Celsius...) ou controlo de capitais, os teus Bitcoin ficam associados à tua identidade para sempre. P2P sem KYC é privacidade financeira — não evasão fiscal.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🍑</span> Simulador Peach Bitcoin</div>
+    <div class="card-body" style="margin-bottom:12px">
+      A <strong style="color:var(--o)">Peach Bitcoin</strong> é uma app mobile P2P focada na Europa. Sem KYC obrigatório, multisig escrow automático, suporta MB Way, SEPA, Revolut.
+    </div>
+    <div id="peach-steps">
+    </div>
+    <div id="peach-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:20px">🤖</span> RoboSats — Lightning P2P</div>
+    <div class="card-body" style="margin-bottom:10px">
+      O <strong style="color:var(--pu)">RoboSats</strong> é 100% Lightning, identidades robóticas descartáveis, acessível via Tor. Máxima privacidade P2P.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:#080808;border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--pu);margin-bottom:6px">✅ Vantagens RoboSats</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • Sem conta, sem email, sem KYC<br>
+          • Lightning = instantâneo<br>
+          • Robot identity descartável<br>
+          • Tor: anonimato máximo<br>
+          • Hold invoices = escrow automático
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:6px">⚠ Considerações</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • Mais técnico que Peach<br>
+          • Requer carteira Lightning<br>
+          • Liquidez pode ser menor<br>
+          • Volumes menores por trade<br>
+          • Ideal para quem já domina LN
+        </div>
+      </div>
+    </div>
+    <a href="https://robosats.com" target="_blank" class="btn-s" style="display:inline-block">→ robosats.com</a>
+  </div>
+
+  <div class="card slide" style="animation-delay:.3s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Final 🥇</div>
+    <div id="quiz-s10"></div>
+    <div id="quiz-s10-next" style="display:none;margin-top:10px"></div>
+  </div>
+  `;
+
+  const peachSteps = [
+    {icon:'📲',title:'Descarrega Peach Bitcoin',desc:'Disponível na App Store e Google Play. Cria um nickname — não precisas de email, telefone ou identidade. O nickname é apenas para o sistema de reputação interno.'},
+    {icon:'🔍',title:'Navega nas ofertas de venda',desc:'Vês uma lista de vendedores com reputação (estrelas + número de trades). Filtra por método de pagamento (MB Way, SEPA, Revolut, etc.) e valor.'},
+    {icon:'🤝',title:'Aceita uma oferta',desc:'Seleccionas a oferta que queres. O Bitcoin do vendedor fica automaticamente bloqueado num escrow multisig 2-de-2. Ninguém pode mover os fundos sem ambas as partes concordarem.'},
+    {icon:'💶',title:'Efectua o pagamento fiat',desc:'Envias o valor acordado por MB Way/Revolut/SEPA para o vendedor. Guarda sempre o comprovativo de pagamento.'},
+    {icon:'✅',title:'Vendedor liberta os sats',desc:'Após confirmar o pagamento, o vendedor liberta o Bitcoin do escrow. Os sats chegam directamente à tua carteira — sem custódia, sem KYC.'},
+    {icon:'📬',title:'Bitcoin na tua Sparrow Wallet',desc:'Os sats chegam com 0 confirmações. Aguardas 6 confirmações (~1h) e tens Bitcoin soberano — sem ligação à tua identidade, directamente na tua cold wallet airgap.'},
+  ];
+
+  G.data.peachStep = -1;
+  const stepsEl = $('peach-steps');
+  peachSteps.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = 'p2p-step';
+    el.id = `peach-step-${i}`;
+    el.innerHTML = `<div class="step-num" id="peach-num-${i}">${i+1}</div><div><div style="font-size:12px;font-weight:700;margin-bottom:2px">${s.icon} ${s.title}</div><div style="font-size:11px;color:var(--m);display:none" id="peach-desc-${i}">${s.desc}</div></div>`;
+    stepsEl.appendChild(el);
+  });
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn';
+  nextBtn.style.cssText = 'width:100%;margin-top:12px';
+  nextBtn.textContent = '▶ Iniciar Compra P2P';
+  nextBtn.onclick = advancePeach;
+  stepsEl.parentNode.insertBefore(nextBtn, $('peach-result'));
+  G.data.peachNextBtn = nextBtn;
+  G.data.peachStepCurrent = 0;
+
+  renderQuiz('quiz-s10', [
+    {q:"O que é KYC e porquê evitar em exchanges centralizadas?",opts:["Know Your Crypto — para segurança","Know Your Customer — liga identidade a UTXOs em bases de dados de terceiros","Know Your Chain — protocolo Bitcoin","Não há problema com KYC em exchanges"],a:1},
+    {q:"O que é o escrow multisig na Peach Bitcoin?",opts:["Uma conta bancária da Peach","Bitcoin bloqueado numa transação 2-de-2 que requer aprovação de ambas as partes","Um tipo de taxa de câmbio","O sistema de reputação"],a:1},
+    {q:"Comprar Bitcoin P2P sem KYC é ilegal?",opts:["Sim, em todos os países","Não — é privacidade financeira legítima, como pagar em dinheiro","Só é legal em El Salvador","Depende do valor"],a:1},
+  ], () => {
+    const next = $('quiz-s10-next');
+    if(next) {
+      next.innerHTML=`<div class="stage-complete">
+        <div style="font-size:60px;margin-bottom:12px">🏆</div>
+        <div style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px">PARABÉNS, BITCOINER SOBERANO!</div>
+        <div style="font-size:13px;color:var(--m2);margin-bottom:16px;line-height:1.7">Completaste todos os estágios da Bitcoin Academy Club.<br>Agora conheces o Bitcoin de ponta a ponta — do bloco genesis à compra P2P soberana.</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <a href="https://www.instagram.com/bitcoin_academy_club/" target="_blank" class="btn" style="background:linear-gradient(135deg,#F7931A,#FFD700)">📸 @bitcoin_academy_club</a>
+          <button class="btn-s" onclick="G.stage=0;G.xp=0;G.completed=new Set();G.quizAnswered=new Set();updateStageDots();renderStage(0);psbtStepCurrent=0;">↺ Jogar Novamente</button>
+        </div>
+      </div>`;
+      completeStage();
+    }
+  });
+}
+
+let peachStepC = 0;
+window.advancePeach = async function() {
+  const steps = 6;
+  const btn = G.data.peachNextBtn;
+  if(peachStepC >= steps) return;
+  if(btn) { btn.disabled=true; btn.textContent='⏳ Em progresso...'; }
+  await sleep(500);
+  const stepEl = $(`peach-step-${peachStepC}`);
+  const numEl = $(`peach-num-${peachStepC}`);
+  const descEl = $(`peach-desc-${peachStepC}`);
+  if(stepEl) stepEl.className='p2p-step done-step';
+  if(numEl) { numEl.className='step-num done'; numEl.textContent='✓'; }
+  if(descEl) descEl.style.display='block';
+  addXP(10);
+  peachStepC++;
+  if(peachStepC < steps) {
+    const next = $(`peach-step-${peachStepC}`);
+    const nextNum = $(`peach-num-${peachStepC}`);
+    if(next) next.className='p2p-step active-step';
+    if(nextNum) nextNum.className='step-num active';
+    if(btn) { btn.disabled=false; btn.textContent=`▶ Passo ${peachStepC+1}: ${['Descarregar App','Navegar Ofertas','Aceitar Oferta','Pagar Fiat','Aguardar Release','Confirmar'][peachStepC]}`; }
+  } else {
+    if(btn) { btn.disabled=true; btn.textContent='🍑 Compra P2P Completa!'; btn.style.background='rgba(247,147,26,.15)'; btn.style.color='var(--o)'; }
+    const res = $('peach-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:9px;padding:12px;font-size:11px;color:var(--gold)">
+        🥇 <strong>Compra P2P sem KYC concluída!</strong> O teu Bitcoin chegou directamente à Sparrow Wallet — sem exchange, sem identidade ligada, sem custódia de terceiros. Isto é soberania financeira Bitcoin.
+      </div>`;
+    }
+  }
+};
+peachStepC = 0;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderStage(0);
+</script>
+</body>
+</html>
