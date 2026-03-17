@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAC Game · Aprende Bitcoin Jogando</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --o:#E8520A;--og:rgba(232,82,10,.13);--bg:#050505;--c1:#0C0C0C;--c2:#111;
+  --bd:#1E1E1E;--t:#E8E8E8;--m:#555;--m2:#888;
+  --gn:#22C55E;--rd:#EF4444;--yl:#EAB308;--bl:#3B82F6;--pu:#A855F7;
+  --gold:#FFD700;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--t);font-family:system-ui,-apple-system,sans-serif;font-size:14px;overflow-x:hidden}
+
+/* ANIMATIONS */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px var(--o)}50%{box-shadow:0 0 30px var(--o),0 0 60px rgba(232,82,10,.3)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes confetti{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes goldShine{0%,100%{background-position:200% center}50%{background-position:-200% center}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes blockMine{0%{background:var(--c1)}50%{background:rgba(232,82,10,.15)}100%{background:rgba(34,197,94,.1)}}
+
+.fade{animation:fadeIn .4s ease both}
+.slide{animation:slideUp .5s ease both}
+.float{animation:float 3s ease-in-out infinite}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+.glow{animation:glow 2s ease-in-out infinite}
+.bounce{animation:bounce .6s ease-in-out}
+
+/* LAYOUT */
+.app{max-width:800px;margin:0 auto;padding:0 12px 60px;min-height:100vh}
+
+/* HEADER */
+.game-header{background:linear-gradient(135deg,#0A0A0A,#111);border:1px solid var(--bd);border-radius:16px;padding:16px 20px;margin:14px 0 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.game-logo{font-size:20px;font-weight:900;color:var(--o);letter-spacing:-.5px}
+.game-sub{font-size:10px;color:var(--m);margin-top:2px}
+.xp-bar-wrap{flex:1;max-width:260px}
+.xp-label{display:flex;justify-content:space-between;font-size:10px;color:var(--m);margin-bottom:4px}
+.xp-bar{height:6px;background:#1A1A1A;border-radius:6px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--o),#FFD700);border-radius:6px;transition:width .8s ease}
+.level-badge{background:var(--og);border:1px solid rgba(232,82,10,.3);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--o)}
+
+/* STAGE MAP */
+.stage-map{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;background:var(--c1);border:1px solid var(--bd);border-radius:12px}
+.stage-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .2s;border:2px solid transparent;flex-shrink:0;position:relative}
+.stage-dot.done{background:rgba(34,197,94,.2);border-color:var(--gn);color:var(--gn)}
+.stage-dot.active{background:rgba(232,82,10,.2);border-color:var(--o);color:var(--o);animation:glow 2s ease-in-out infinite}
+.stage-dot.locked{background:#0A0A0A;border-color:#1A1A1A;color:#222;cursor:not-allowed}
+.stage-dot.gold{background:rgba(255,215,0,.15);border-color:var(--gold);color:var(--gold);animation:glow 2s ease-in-out infinite}
+.stage-line{flex:1;height:2px;background:#1A1A1A;align-self:center;min-width:8px}
+.stage-line.done{background:var(--gn)}
+
+/* CARDS */
+.card{background:var(--c1);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card-body{font-size:12px;color:var(--m2);line-height:1.8}
+.highlight{background:rgba(232,82,10,.07);border-left:3px solid var(--o);border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:var(--t);line-height:1.7;margin:10px 0}
+
+/* BUTTONS */
+.btn{padding:10px 22px;border-radius:10px;font-size:13px;font-weight:800;border:none;background:var(--o);color:#000;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-s{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:transparent;color:var(--m);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-s:hover{border-color:var(--o);color:var(--o)}
+.btn-gold{background:linear-gradient(135deg,#FFD700,#FFA500);color:#000;animation:glow 2s ease-in-out infinite}
+
+/* QUIZ */
+.quiz-opt{background:#080808;border:1px solid var(--bd);border-radius:9px;padding:11px 14px;cursor:pointer;font-size:12px;margin-bottom:7px;transition:all .15s;display:flex;align-items:center;gap:8px}
+.quiz-opt:hover{border-color:rgba(232,82,10,.4);background:rgba(232,82,10,.04)}
+.quiz-opt.correct{background:rgba(34,197,94,.1);border-color:var(--gn);color:var(--gn)}
+.quiz-opt.wrong{background:rgba(239,68,68,.1);border-color:var(--rd);color:var(--rd);animation:shake .3s ease}
+.quiz-opt.reveal{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.2)}
+.opt-icon{width:22px;height:22px;border-radius:50%;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+/* INTERACTIVE ELEMENTS */
+.mine-btn{width:100%;padding:18px;font-size:24px;border-radius:12px;background:linear-gradient(135deg,rgba(232,82,10,.15),rgba(232,82,10,.05));border:2px solid rgba(232,82,10,.3);color:var(--o);cursor:pointer;font-family:inherit;transition:all .2s;font-weight:900;letter-spacing:1px}
+.mine-btn:hover:not(:disabled){background:rgba(232,82,10,.2);transform:scale(1.02)}
+.mine-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.hash-display{font-family:'Courier New',monospace;font-size:11px;background:#050505;border:1px solid var(--bd);border-radius:8px;padding:10px 12px;word-break:break-all;color:var(--m2);transition:color .3s;min-height:40px;line-height:1.6}
+.hash-display.valid{color:var(--gn);border-color:rgba(34,197,94,.3)}
+
+.block-visual{background:linear-gradient(135deg,rgba(232,82,10,.08),rgba(232,82,10,.02));border:2px solid rgba(232,82,10,.2);border-radius:12px;padding:14px 16px;font-family:'Courier New',monospace;font-size:11px;transition:all .5s}
+.block-visual.mined{border-color:var(--gn);background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.02))}
+
+.tx-item{background:#080808;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s}
+.tx-item:hover{border-color:rgba(232,82,10,.3)}
+.tx-item.selected{border-color:var(--o);background:rgba(232,82,10,.06)}
+.tx-item.confirmed{border-color:var(--gn);background:rgba(34,197,94,.06)}
+
+.mempool-area{background:#050505;border:1px solid var(--bd);border-radius:10px;padding:12px;min-height:120px;position:relative;overflow:hidden}
+.mempool-tx{display:inline-block;margin:3px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;animation:float 2s ease-in-out infinite}
+.mempool-tx.high{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--rd)}
+.mempool-tx.med{background:rgba(232,82,10,.15);border:1px solid rgba(232,82,10,.3);color:var(--o)}
+.mempool-tx.low{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--gn)}
+
+.node-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.node-item{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:10px;text-align:center;transition:all .3s;cursor:default}
+.node-item.validating{border-color:var(--o);background:rgba(232,82,10,.08);animation:pulse 1s ease-in-out infinite}
+.node-item.valid{border-color:var(--gn);background:rgba(34,197,94,.08)}
+.node-item.invalid{border-color:var(--rd);background:rgba(239,68,68,.08)}
+
+.utxo-box{background:#080808;border:2px solid var(--bd);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;transition:all .3s;cursor:pointer}
+.utxo-box.spent{opacity:.4;border-style:dashed;text-decoration:line-through}
+.utxo-box.selected{border-color:var(--o);background:rgba(232,82,10,.08)}
+.utxo-box.new{border-color:var(--gn);background:rgba(34,197,94,.08);animation:fadeIn .5s ease}
+
+.addr-type{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.addr-type:hover{border-color:rgba(232,82,10,.4)}
+.addr-type.active{border-color:var(--o);background:var(--og)}
+.addr-prefix{font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:2px 8px;border-radius:6px}
+
+.wallet-card{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:10px}
+.wallet-card:hover:not(.locked-w){border-color:rgba(232,82,10,.3)}
+.wallet-card.selected-w{border-color:var(--o);background:var(--og)}
+.wallet-card.locked-w{opacity:.5;cursor:not-allowed}
+.wallet-card.danger-w{border-color:rgba(239,68,68,.3);background:rgba(239,68,34,.04)}
+
+.sparrow-ui{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:14px;font-family:system-ui;overflow:hidden}
+.sparrow-tab{display:flex;gap:1px;background:#050505;border-radius:7px 7px 0 0;overflow:hidden;margin-bottom:0}
+.sparrow-tab-btn{flex:1;padding:7px 4px;text-align:center;font-size:10px;font-weight:600;background:#0A0A0A;color:var(--m);cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.sparrow-tab-btn.active{background:var(--c1);color:var(--o)}
+.sparrow-body{background:var(--c1);border:1px solid var(--bd);border-radius:0 0 8px 8px;padding:12px}
+
+.p2p-step{background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;transition:all .3s}
+.p2p-step.active-step{border-color:var(--o);background:rgba(232,82,10,.06)}
+.p2p-step.done-step{border-color:var(--gn);background:rgba(34,197,94,.06)}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s}
+.step-num.active{background:var(--o);color:#000}
+.step-num.done{background:var(--gn);color:#000}
+
+/* PROGRESS & SCORE */
+.score-popup{position:fixed;top:80px;right:20px;background:var(--o);color:#000;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:800;z-index:1000;animation:slideUp .3s ease,fadeIn .3s ease;pointer-events:none}
+
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:999;animation:confetti 3s ease-in forwards}
+
+.stage-complete{text-align:center;padding:24px;background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.02));border:1px solid rgba(34,197,94,.2);border-radius:14px;animation:fadeIn .5s ease}
+
+/* GOLD STAGE */
+.gold-card{background:linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,165,0,.02));border:1px solid rgba(255,215,0,.25);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.gold-title{font-size:16px;font-weight:900;background:linear-gradient(135deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* CONFIRM ANIMATION */
+.confirm-block{background:#080808;border:2px solid var(--bd);border-radius:8px;padding:10px;text-align:center;font-size:11px;transition:all .5s}
+.confirm-block.confirmed{border-color:var(--gn);background:rgba(34,197,94,.08)}
+.confirm-block.current{border-color:var(--o);background:rgba(232,82,10,.08);animation:glow 1s ease-in-out infinite}
+
+/* MISC */
+.tag{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600;display:inline-block}
+.tag-green{background:rgba(34,197,94,.12);color:var(--gn)}
+.tag-red{background:rgba(239,68,68,.12);color:var(--rd)}
+.tag-orange{background:rgba(232,82,10,.12);color:var(--o)}
+.tag-blue{background:rgba(59,130,246,.12);color:var(--bl)}
+.tag-gold{background:rgba(255,215,0,.12);color:var(--gold)}
+
+.progress-stages{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.ps{height:4px;flex:1;background:#1A1A1A;border-radius:4px;min-width:20px;transition:background .5s}
+.ps.done{background:var(--gn)}
+.ps.active{background:var(--o)}
+
+input[type=range]{accent-color:var(--o);width:100%}
+input[type=number],input[type=text]{background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 11px;color:var(--t);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--o)}
+
+@media(max-width:600px){
+  .node-grid{grid-template-columns:1fr 1fr}
+  .stage-map{gap:3px}
+  .stage-dot{width:24px;height:24px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<div class="game-header fade">
+  <!-- LOGO -->
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="width:62px;height:62px;border-radius:14px;overflow:hidden;background:#000;border:2px solid rgba(232,82,10,.4);flex-shrink:0"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAYAAADL1t+KAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAEuWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI1LTA5LTE1PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkV4dElkPmE1ZGU2YWI4LTc0Y2UtNDE5OC1iYTNiLWVjMDE1MzNkNjUyMDwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5QTEFZQkFDIC0gMjwvcmRmOmxpPgogICA8L3JkZjpBbHQ+CiAgPC9kYzp0aXRsZT4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFi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" width="62" height="62" style="display:block"></div>
+    <div>
+      <div class="game-logo">BAC Game</div>
+      <div class="game-sub">Bitcoin Academy Club · Aprende Bitcoin Jogando</div>
+    </div>
+  </div>
+  <!-- XP + LEVEL -->
+  <div class="xp-bar-wrap">
+    <div class="xp-label"><span>XP <span id="level-badge" style="background:rgba(232,82,10,.15);border:1px solid rgba(232,82,10,.3);border-radius:8px;padding:1px 7px;font-size:10px;font-weight:700;color:var(--o)">Nível 1</span></span><span id="xp-text">0 / 1100</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--m);margin-top:3px"><span>Iniciante</span><span>Bitcoiner Soberano 🥇</span></div>
+  </div>
+  <!-- SCORE -->
+  <div style="text-align:right">
+    <div style="font-size:10px;color:var(--m);margin-bottom:3px">Pontuação</div>
+    <div style="font-size:22px;font-weight:900;color:var(--o);font-family:monospace" id="score-display">0</div>
+    <div style="font-size:9px;color:var(--m)">pts</div>
+  </div>
+</div>
+
+<!-- STAGE MAP -->
+<div class="stage-map">
+  <div class="stage-dot active" id="sd-0" onclick="jumpStage(0)" title="Blocos">⛓</div>
+  <div class="stage-line" id="sl-0"></div>
+  <div class="stage-dot locked" id="sd-1" onclick="jumpStage(1)" title="Transações">💸</div>
+  <div class="stage-line" id="sl-1"></div>
+  <div class="stage-dot locked" id="sd-2" onclick="jumpStage(2)" title="Mempool">🏊</div>
+  <div class="stage-line" id="sl-2"></div>
+  <div class="stage-dot locked" id="sd-3" onclick="jumpStage(3)" title="Nodes">🌐</div>
+  <div class="stage-line" id="sl-3"></div>
+  <div class="stage-dot locked" id="sd-4" onclick="jumpStage(4)" title="UTXO">🪙</div>
+  <div class="stage-line" id="sl-4"></div>
+  <div class="stage-dot locked" id="sd-5" onclick="jumpStage(5)" title="Confirmações">✅</div>
+  <div class="stage-line" id="sl-5"></div>
+  <div class="stage-dot locked" id="sd-6" onclick="jumpStage(6)" title="Endereços">📬</div>
+  <div class="stage-line" id="sl-6"></div>
+  <div class="stage-dot locked" id="sd-7" onclick="jumpStage(7)" title="Carteiras">🔐</div>
+  <div class="stage-line" id="sl-7"></div>
+  <div class="stage-dot locked" id="sd-8" onclick="jumpStage(8)" title="Assinaturas Criptográficas">✍</div>
+  <div class="stage-line" id="sl-8"></div>
+  <div class="stage-dot locked" id="sd-9" onclick="jumpStage(9)" title="Sparrow / Blue Wallet">💼</div>
+  <div class="stage-line" id="sl-9"></div>
+  <div class="stage-dot locked gold" id="sd-10" onclick="jumpStage(10)" title="P2P Gold">🥇</div>
+</div>
+
+<!-- STAGE CONTENT -->
+<div id="stage-content"></div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let G = {
+  stage: 0,
+  xp: 0,
+  score: 0,
+  maxXp: 1100,
+  completed: new Set(),
+  quizAnswered: new Set(),
+  data: {}
+};
+
+const STAGE_XP = [100,100,100,100,100,100,100,100,100,100,200];
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const randHex = n => [...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function addXP(amount) {
+  G.xp = Math.min(G.xp + amount, G.maxXp);
+  G.score = (G.score||0) + amount;
+  const pct = (G.xp / G.maxXp * 100).toFixed(1);
+  const fill = $('xp-fill');
+  if(fill) fill.style.width = pct + '%';
+  const txt = $('xp-text');
+  if(txt) txt.textContent = `${G.xp} / ${G.maxXp}`;
+  const lvl = Math.floor(G.xp / 100) + 1;
+  const badge = $('level-badge');
+  if(badge) badge.textContent = `Nível ${lvl}`;
+  const sd = $('score-display');
+  if(sd) sd.textContent = G.score.toLocaleString('pt-PT');
+  showScorePopup('+' + amount + ' XP');
+  // save to localStorage
+  try { localStorage.setItem('bac_game_score', JSON.stringify({score:G.score,xp:G.xp,completed:G.completed.size,date:new Date().toLocaleDateString('pt-PT')})); } catch(_){}
+}
+
+function showScorePopup(txt) {
+  const el = document.createElement('div');
+  el.className = 'score-popup';
+  el.textContent = txt;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+function showConfetti() {
+  const colors = ['#F7931A','#22C55E','#FFD700','#3B82F6','#A855F7'];
+  for(let i=0;i<20;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${colors[i%colors.length]};animation-delay:${Math.random()*.5}s;animation-duration:${2+Math.random()}s;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),3000);
+  }
+}
+
+function updateStageDots() {
+  for(let i=0;i<=10;i++){
+    const dot = $(`sd-${i}`);
+    const line = $(`sl-${i}`);
+    if(!dot) continue;
+    if(G.completed.has(i)) {
+      dot.className = i===10 ? 'stage-dot gold' : 'stage-dot done';
+      dot.innerHTML = i===10 ? '🥇' : '✓';
+    } else if(i === G.stage) {
+      dot.className = i===10 ? 'stage-dot gold' : 'stage-dot active';
+    } else if(i <= (G.completed.size)) {
+      dot.className = 'stage-dot active';
+      dot.style.opacity = '.6';
+    }
+    if(line && G.completed.has(i)) line.className = 'stage-line done';
+  }
+}
+
+function jumpStage(n) {
+  const unlocked = n === 0 || G.completed.has(n-1) || G.completed.has(n);
+  if(!unlocked) return;
+  G.stage = n;
+  renderStage(n);
+}
+
+function completeStage() {
+  G.completed.add(G.stage);
+  addXP(STAGE_XP[G.stage]);
+  showConfetti();
+  updateStageDots();
+  const next = G.stage + 1;
+  if(next <= 10) {
+    const dot = $(`sd-${next}`);
+    if(dot) dot.className = next===10 ? 'stage-dot gold' : 'stage-dot active';
+    setTimeout(() => {
+      G.stage = next;
+      renderStage(next);
+    }, 2200);
+  }
+}
+
+// ── QUIZ HELPER ───────────────────────────────────────────────────────────
+function renderQuiz(containerId, questions, onAllCorrect) {
+  const c = $(containerId); if(!c) return;
+  let score = 0;
+  const total = questions.length;
+
+  c.innerHTML = questions.map((q,i) => `
+    <div style="margin-bottom:14px" id="q-block-${i}">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--t)">${q.q}</div>
+      ${q.opts.map((o,j) => `
+        <div class="quiz-opt" id="qo-${i}-${j}" onclick="answerQ(${i},${j},${q.a},${total},'${containerId}')">
+          <div class="opt-icon">${'ABCD'[j]}</div>
+          <span>${o}</span>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  c._onAllCorrect = onAllCorrect;
+  c._total = total;
+  c._score = 0;
+}
+
+window.answerQ = function(qi, ji, correct, total, cid) {
+  const opt = $(`qo-${qi}-${ji}`);
+  if(!opt || opt.dataset.answered) return;
+  const qKey = `${cid}-${qi}`;
+  if(G.quizAnswered.has(qKey)) return;
+  G.quizAnswered.add(qKey);
+  // mark all opts for this question
+  for(let k=0;k<4;k++){const o=$(`qo-${qi}-${k}`);if(o){o.dataset.answered='1';o.style.cursor='default';}}
+  const isCorrect = ji === correct;
+  opt.className = 'quiz-opt ' + (isCorrect ? 'correct' : 'wrong');
+  $(`qo-${qi}-${correct}`)?.classList.add('correct');
+  const c = $(cid);
+  if(!c) return;
+  if(isCorrect) {
+    c._score = (c._score||0) + 1;
+    addXP(10);
+  }
+  if(c._score === c._total && c._onAllCorrect) {
+    setTimeout(() => c._onAllCorrect(), 600);
+  }
+};
+
+// ── STAGE RENDERER ────────────────────────────────────────────────────────
+function renderStage(n) {
+  const stages = [s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10];
+  const c = $('stage-content');
+  c.innerHTML = '';
+  c.className = 'fade';
+  stages[n]();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 0: BLOCO GENESIS
+// ══════════════════════════════════════════════════════════════════
+function s0() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">⛓</span> Etapa 1 — O Bloco Bitcoin</div>
+    <div class="card-body">
+      O Bitcoin é uma cadeia de blocos — a <strong style="color:var(--o)">blockchain</strong>. Cada bloco é como uma página de um livro contabilístico público que registra transações permanentemente.<br><br>
+      Um bloco Bitcoin contém:
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:4px">📋 Header (Cabeçalho)</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • <strong>Hash do bloco anterior</strong> — ligação com o bloco antes<br>
+          • <strong>Merkle Root</strong> — impressão digital de todas as txs<br>
+          • <strong>Timestamp</strong> — data e hora de criação<br>
+          • <strong>Nonce</strong> — número mágico da mineração<br>
+          • <strong>Bits (dificuldade)</strong> — quão difícil de minerar
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:4px">💸 Body (Corpo)</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • <strong>Transação Coinbase</strong> — recompensa ao miner<br>
+          • <strong>Transações de utilizadores</strong> — transferências de BTC<br>
+          • Até ~2.700 transações por bloco<br>
+          • Bloco a cada ~10 minutos<br>
+          • Tamanho máximo: 4MB (SegWit)
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🔗 <strong>Cadeia imutável:</strong> Cada bloco contém o hash do bloco anterior. Se alterares qualquer dado num bloco antigo, todos os blocos seguintes ficam inválidos — seria necessário refazer o trabalho computacional de toda a cadeia. É por isso que o Bitcoin é imutável.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">⛏</span> Simula a Mineração</div>
+    <div class="card-body" style="margin-bottom:12px">
+      O miner testa bilhões de valores de <strong style="color:var(--o)">nonce</strong> até encontrar um hash que começa com zeros suficientes. Clica para simular:
+    </div>
+    <div class="block-visual" id="block-vis" style="margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;margin-bottom:8px">
+        <div><span style="color:var(--m)">Bloco #</span> <span style="color:var(--o);font-weight:700" id="bk-num">880001</span></div>
+        <div><span style="color:var(--m)">Nonce:</span> <span style="color:var(--t)" id="bk-nonce">0</span></div>
+        <div><span style="color:var(--m)">Txs:</span> <span style="color:var(--t)" id="bk-txs">0</span></div>
+        <div><span style="color:var(--m)">Dificuldade:</span> <span style="color:var(--yl)">00000...</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--m);margin-bottom:4px">Hash actual:</div>
+      <div class="hash-display" id="hash-disp">Clica em "Minerar Bloco" para começar...</div>
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;color:var(--m);margin-bottom:4px">Velocidade de mineração (TH/s): <span id="speed-val" style="color:var(--o)">1</span></div>
+      <input type="range" min="1" max="5" value="1" id="speed-slider" oninput="document.getElementById('speed-val').textContent=this.value">
+    </div>
+    <button class="mine-btn" id="mine-btn" onclick="startMining()">⛏ MINERAR BLOCO</button>
+    <div id="mine-result" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Rápido</div>
+    <div id="quiz-s0"></div>
+    <div id="quiz-s0-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  renderQuiz('quiz-s0', [
+    {q:"O que é o 'Nonce' num bloco Bitcoin?",opts:["O valor dos fees","Um número que miners testam até encontrar hash válido","O endereço do miner","A data do bloco"],a:1},
+    {q:"Qual o tempo médio entre blocos Bitcoin?",opts:["1 minuto","5 minutos","10 minutos","1 hora"],a:2},
+    {q:"O que torna a blockchain imutável?",opts:["Encriptação das transações","Cada bloco contém o hash do bloco anterior","Os nodes guardam cópias","Os miners validam tudo"],a:1},
+  ], () => { $('quiz-s0-next').style.display = 'block'; });
+
+  G.data.txsInBlock = 0;
+  G.data.blockMined = false;
+}
+
+window.startMining = async function() {
+  if(G.data.blockMined) return;
+  const btn = $('mine-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ A minerar...';
+  const speed = parseInt($('speed-slider')?.value||1);
+  const nonceEl = $('bk-nonce'), hashEl = $('hash-disp'), txsEl = $('bk-txs');
+  const vis = $('block-vis');
+  let nonce = 0;
+  const interval = Math.max(10, 80 - speed*15);
+  const target = Math.floor(10000 + Math.random()*40000);
+
+  const mine = setInterval(() => {
+    nonce += Math.floor(Math.random()*1000*speed)+100;
+    if(nonceEl) nonceEl.textContent = nonce.toLocaleString('pt-PT');
+    const fakeHash = randHex(64);
+    if(hashEl) { hashEl.textContent = fakeHash; hashEl.className = 'hash-display'; }
+    if(nonce >= target) {
+      clearInterval(mine);
+      const validHash = '00000' + randHex(59);
+      if(hashEl) { hashEl.textContent = validHash; hashEl.className = 'hash-display valid'; }
+      if(txsEl) txsEl.textContent = Math.floor(2000+Math.random()*700);
+      if(vis) vis.className = 'block-visual mined';
+      if(btn) { btn.textContent = '✅ Bloco Minerado!'; btn.style.background='rgba(34,197,94,.15)'; btn.style.borderColor='var(--gn)'; btn.style.color='var(--gn)'; }
+      G.data.blockMined = true;
+      addXP(30);
+      const res = $('mine-result');
+      if(res) {
+        res.style.display = 'block';
+        res.innerHTML = `<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+          🎉 <strong>Bloco #880001 minerado!</strong> Nonce encontrado após ${nonce.toLocaleString('pt-PT')} tentativas. O hash começa com "00000" — cumpre a dificuldade da rede. Este bloco será propagado para todos os nodes Bitcoin em ~12 segundos.
+        </div>`;
+      }
+    }
+  }, interval);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 1: TRANSAÇÕES
+// ══════════════════════════════════════════════════════════════════
+function s1() {
+  const c = $('stage-content');
+  const txs = [
+    {id:'tx1',from:'bc1q...Satoshi',to:'bc1q...Vitalik',amount:'0.05',fee:'12 sat/vB',size:'250 vB'},
+    {id:'tx2',from:'1ABC...xK9',to:'3XYZ...pM2',amount:'0.12',fee:'8 sat/vB',size:'141 vB'},
+    {id:'tx3',from:'bc1p...rT7',to:'bc1q...wN5',amount:'0.30',fee:'25 sat/vB',size:'340 vB'},
+    {id:'tx4',from:'1DEF...zL4',to:'bc1q...yO8',amount:'0.008',fee:'5 sat/vB',size:'200 vB'},
+  ];
+
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">💸</span> Etapa 2 — Anatomia de uma Transação</div>
+    <div class="card-body">
+      Uma transação Bitcoin não é um simples "envio de dinheiro". É uma mensagem criptograficamente assinada que destrói UTXOs antigos e cria UTXOs novos.
+    </div>
+    <div style="margin:12px 0;background:#050505;border:1px solid var(--bd);border-radius:10px;padding:14px">
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px;font-weight:700">Estrutura de uma Transação Bitcoin</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">📥</div>
+          <div style="font-size:10px;color:var(--rd);font-weight:700;margin-top:3px">INPUTS</div>
+          <div style="font-size:9px;color:var(--m)">UTXOs gastos<br>+ assinatura</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(232,82,10,.08);border:1px solid rgba(232,82,10,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">⚙</div>
+          <div style="font-size:10px;color:var(--o);font-weight:700;margin-top:3px">SCRIPT</div>
+          <div style="font-size:9px;color:var(--m)">Validação<br>criptográfica</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">📤</div>
+          <div style="font-size:10px;color:var(--gn);font-weight:700;margin-top:3px">OUTPUTS</div>
+          <div style="font-size:9px;color:var(--m)">Novos UTXOs<br>+ troco</div>
+        </div>
+        <div style="font-size:20px;color:var(--m)">→</div>
+        <div style="background:rgba(102,102,102,.08);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;text-align:center;min-width:80px">
+          <div style="font-size:18px">⛏</div>
+          <div style="font-size:10px;color:var(--m);font-weight:700;margin-top:3px">FEE</div>
+          <div style="font-size:9px;color:var(--m)">Inputs - Outputs<br>= fee ao miner</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      💡 <strong>Fee não é um output explícito.</strong> O miner recebe a diferença entre a soma dos inputs e a soma dos outputs. Se enviares 0.10 BTC e o destinatário receber 0.098 BTC, o miner recebe 0.002 BTC automaticamente.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Constrói a tua Transação</div>
+    <div class="card-body" style="margin-bottom:12px">Tens 0.50 BTC disponível. Envia 0.20 BTC para um amigo. Define o fee rate:</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--m);margin-bottom:4px">Fee Rate: <span id="tx-fee-val" style="color:var(--o);font-weight:700">10</span> sat/vByte</div>
+      <input type="range" min="1" max="50" value="10" id="tx-fee-slider" oninput="updateTxCalc()">
+    </div>
+    <div id="tx-calc" style="background:#080808;border:1px solid var(--bd);border-radius:9px;padding:12px;font-size:12px;font-family:monospace">
+    </div>
+    <div style="margin-top:10px;text-align:right">
+      <button class="btn" onclick="broadcastTx()" id="broadcast-btn">📡 Transmitir para Mempool</button>
+    </div>
+    <div id="broadcast-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s1"></div>
+    <div id="quiz-s1-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  updateTxCalc();
+  renderQuiz('quiz-s1', [
+    {q:"Como é calculada a fee de uma transação?",opts:["É um campo específico na tx","Inputs - Outputs = Fee para o miner","Percentagem do valor enviado","Define-se no endereço de destino"],a:1},
+    {q:"O que é o 'troco' numa transação Bitcoin?",opts:["Uma taxa extra para o miner","O valor que sobra e volta à tua própria carteira","Um erro na transação","O valor total enviado"],a:1},
+  ], () => { $('quiz-s1-next').style.display = 'block'; });
+}
+
+window.updateTxCalc = function() {
+  const fee = parseInt($('tx-fee-slider')?.value||10);
+  const fv = $('tx-fee-val'); if(fv) fv.textContent = fee;
+  const size = 250;
+  const feeSats = fee * size;
+  const feeBtc = feeSats / 1e8;
+  const change = 0.50 - 0.20 - feeBtc;
+  const feeEur = (feeBtc * 75000).toFixed(2);
+  const conf = fee > 20 ? '~10 min (próximo bloco)' : fee > 8 ? '~30 min (~3 blocos)' : '~1-3 horas (+6 blocos)';
+  const calc = $('tx-calc');
+  if(calc) calc.innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center">
+      <span style="color:var(--m)">Input:</span><span style="color:var(--rd)">0.50000000 BTC</span>
+      <span style="color:var(--m)">Enviado:</span><span style="color:var(--gn)">0.20000000 BTC</span>
+      <span style="color:var(--m)">Troco:</span><span style="color:var(--bl)">${change.toFixed(8)} BTC</span>
+      <span style="color:var(--m)">Fee:</span><span style="color:var(--o)">${feeSats.toLocaleString('pt-PT')} sats ≈ €${feeEur}</span>
+      <span style="color:var(--m)">Tamanho:</span><span>${size} vBytes</span>
+      <span style="color:var(--m)">Confirmação:</span><span style="color:${fee>20?'var(--gn)':fee>8?'var(--o)':'var(--rd)'}">${conf}</span>
+    </div>`;
+};
+
+window.broadcastTx = function() {
+  const btn = $('broadcast-btn'); if(btn) { btn.disabled=true; btn.textContent='📡 A transmitir...'; }
+  setTimeout(() => {
+    const res = $('broadcast-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+        ✅ Transação transmitida! TXID: <span style="font-family:monospace">${randHex(64)}</span><br>
+        <span style="color:var(--m)">A transação está agora no mempool à espera de ser incluída num bloco.</span>
+      </div>`;
+    }
+    if(btn) { btn.textContent='✅ Transmitida!'; }
+    addXP(20);
+  }, 1500);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 2: MEMPOOL
+// ══════════════════════════════════════════════════════════════════
+function s2() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🏊</span> Etapa 3 — O Mempool</div>
+    <div class="card-body">
+      O <strong style="color:var(--o)">mempool</strong> (memory pool) é a sala de espera das transações. Cada node da rede tem o seu próprio mempool com as transações que ainda não foram confirmadas num bloco.
+    </div>
+    <div style="margin:12px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">📡</div>
+          <div style="font-size:10px;font-weight:700;color:var(--o);margin-top:4px">Transmites a TX</div>
+          <div style="font-size:9px;color:var(--m)">Propagada para todos os nodes</div>
+        </div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">🏊</div>
+          <div style="font-size:10px;font-weight:700;color:var(--bl);margin-top:4px">Entra no Mempool</div>
+          <div style="font-size:9px;color:var(--m)">Aguarda ser seleccionada</div>
+        </div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px">
+          <div style="font-size:22px">⛏</div>
+          <div style="font-size:10px;font-weight:700;color:var(--gn);margin-top:4px">Miner selecciona</div>
+          <div style="font-size:9px;color:var(--m)">Prioridade por fee rate</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      ⚡ <strong>RBF (Replace-By-Fee):</strong> Se a tua transação está presa no mempool com fee baixo, podes enviá-la novamente com fee mais alto. O node substitui a versão anterior se o novo fee for pelo menos 10% superior.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Jogo: Selecciona Transações como Miner</div>
+    <div class="card-body" style="margin-bottom:10px">
+      Tens espaço para <strong style="color:var(--o)">4 transações</strong> no bloco. Selecciona as mais lucrativas (maior fee rate):
+    </div>
+    <div class="mempool-area" id="mp-area">
+    </div>
+    <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="font-size:11px;color:var(--m)">Seleccionadas: <span id="mp-sel" style="color:var(--o);font-weight:700">0</span>/4 · Fee total: <span id="mp-fee" style="color:var(--gn);font-weight:700">0</span> sats</div>
+      <button class="btn" id="mp-mine-btn" onclick="mineMempool()" disabled>⛏ Minar Bloco</button>
+    </div>
+    <div id="mp-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s2"></div>
+    <div id="quiz-s2-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  // populate mempool
+  const txData = [
+    {id:'a',label:'TX-A',sat:45,sats:11250},
+    {id:'b',label:'TX-B',sat:8,sats:2000},
+    {id:'c',label:'TX-C',sat:32,sats:8000},
+    {id:'d',label:'TX-D',sat:3,sats:750},
+    {id:'e',label:'TX-E',sat:67,sats:16750},
+    {id:'f',label:'TX-F',sat:15,sats:3750},
+    {id:'g',label:'TX-G',sat:55,sats:13750},
+    {id:'h',label:'TX-H',sat:6,sats:1500},
+  ];
+  G.data.mpTxs = txData;
+  G.data.mpSel = new Set();
+
+  const area = $('mp-area');
+  txData.forEach(tx => {
+    const cls = tx.sat > 40 ? 'high' : tx.sat > 15 ? 'med' : 'low';
+    const el = document.createElement('div');
+    el.className = `mempool-tx ${cls}`;
+    el.id = `mp-tx-${tx.id}`;
+    el.style.animationDelay = `${Math.random()*2}s`;
+    el.innerHTML = `${tx.label} <span style="font-size:9px">${tx.sat} sat/vB</span>`;
+    el.onclick = () => toggleMpTx(tx.id, tx.sats);
+    area.appendChild(el);
+  });
+
+  renderQuiz('quiz-s2', [
+    {q:"O que é o mempool?",opts:["Um bloco especial do Bitcoin","Área de espera de txs não confirmadas","A recompensa do miner","O hash do bloco"],a:1},
+    {q:"Como os miners escolhem transações do mempool?",opts:["Por ordem de chegada (FIFO)","Por valor total da transação","Por fee rate (sat/vByte) mais alto","Aleatoriamente"],a:2},
+    {q:"O que é RBF (Replace-By-Fee)?",opts:["Um tipo de endereço Bitcoin","Substituir tx pendente por versão com fee mais alto","Uma forma de cancelar transações","O protocolo Lightning"],a:1},
+  ], () => { $('quiz-s2-next').style.display = 'block'; });
+}
+
+window.toggleMpTx = function(id, sats) {
+  const sel = G.data.mpSel;
+  const el = $(`mp-tx-${id}`);
+  if(sel.has(id)) {
+    sel.delete(id);
+    el.style.transform = '';
+    el.style.opacity = '1';
+  } else {
+    if(sel.size >= 4) return;
+    sel.add(id);
+    el.style.transform = 'scale(1.1)';
+    el.style.opacity = '.7';
+    el.style.filter = 'brightness(1.3)';
+  }
+  const totalFee = [...sel].reduce((s,id) => s + G.data.mpTxs.find(t=>t.id===id).sats, 0);
+  const selEl = $('mp-sel'); if(selEl) selEl.textContent = sel.size;
+  const feeEl = $('mp-fee'); if(feeEl) feeEl.textContent = totalFee.toLocaleString('pt-PT');
+  const btn = $('mp-mine-btn'); if(btn) btn.disabled = sel.size === 0;
+};
+
+window.mineMempool = function() {
+  const sel = G.data.mpSel;
+  const txData = G.data.mpTxs;
+  const selTxs = [...sel].map(id => txData.find(t=>t.id===id));
+  const totalFee = selTxs.reduce((s,t)=>s+t.sats,0);
+  const bestPossible = [...txData].sort((a,b)=>b.sats-a.sats).slice(0,4).reduce((s,t)=>s+t.sats,0);
+  const efficiency = Math.round((totalFee/bestPossible)*100);
+  const res = $('mp-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(232,82,10,.08);border:1px solid rgba(232,82,10,.2);border-radius:9px;padding:12px;font-size:11px">
+      <div style="font-weight:700;color:var(--o);margin-bottom:6px">⛏ Bloco minerado com ${selTxs.length} transações!</div>
+      <div>Fee total recolhido: <strong style="color:var(--gn)">${totalFee.toLocaleString('pt-PT')} sats</strong></div>
+      <div>Eficiência: <strong style="color:${efficiency>80?'var(--gn)':'var(--yl)'}">${efficiency}%</strong> ${efficiency===100?'🏆 Perfeito!':efficiency>80?'👍 Muito bom!':'💡 Dica: selecciona os de maior sat/vB'}</div>
+    </div>`;
+    addXP(20);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 3: NODES
+// ══════════════════════════════════════════════════════════════════
+function s3() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🌐</span> Etapa 4 — Nodes: O Coração do Bitcoin</div>
+    <div class="card-body">
+      Um <strong style="color:var(--o)">node (nó)</strong> é um computador que corre o software Bitcoin Core e mantém uma cópia completa de toda a blockchain — desde o bloco genesis (2009) até hoje.<br><br>
+      <strong style="color:var(--t)">Os nodes são a verdadeira soberania do Bitcoin.</strong> Não confiam em ninguém — verificam tudo por si próprios.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:6px">🖥 Full Node</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          ✅ Descarrega toda a blockchain (~600 GB)<br>
+          ✅ Valida cada transação e bloco<br>
+          ✅ Não confia em nenhum servidor<br>
+          ✅ Garante soberania total<br>
+          ⚠ Requer espaço em disco
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">📦 Pruned Node</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          ✅ Valida toda a blockchain na íntegra<br>
+          ✅ Guarda apenas blocos recentes (~5 GB)<br>
+          ✅ Mesma segurança que full node<br>
+          ✅ Ideal para hardware doméstico<br>
+          ℹ Não partilha blocos antigos
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🛡 <strong>Regras que os nodes validam em cada bloco:</strong><br>
+      • Hash cumpre a dificuldade alvo · Transação coinbase não cria BTC a mais · Todos os inputs existem e não foram gastos · Assinaturas criptográficas são válidas · Tamanho do bloco dentro dos limites · Timestamp correcto
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula a Validação de um Bloco</div>
+    <div class="card-body" style="margin-bottom:12px">
+      Clica em cada node para activar a validação. Todos os nodes têm de concordar:
+    </div>
+    <div class="node-grid" id="node-grid">
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <div style="font-size:12px;color:var(--m)" id="node-status">Clica nos nodes para validar o bloco...</div>
+    </div>
+    <div id="node-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s3"></div>
+    <div id="quiz-s3-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  // nodes
+  const nodes = [
+    {id:'n0',name:'Node Lisboa',flag:'🇵🇹'},
+    {id:'n1',name:'Node Berlim',flag:'🇩🇪'},
+    {id:'n2',name:'Node Miami',flag:'🇺🇸'},
+    {id:'n3',name:'Node Tóquio',flag:'🇯🇵'},
+    {id:'n4',name:'Node São Paulo',flag:'🇧🇷'},
+    {id:'n5',name:'Node Sydney',flag:'🇦🇺'},
+  ];
+  G.data.nodesValidated = new Set();
+  const grid = $('node-grid');
+  nodes.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'node-item';
+    el.id = `ni-${n.id}`;
+    el.innerHTML = `<div style="font-size:20px;margin-bottom:4px">${n.flag}</div><div style="font-size:10px;font-weight:700">${n.name}</div><div style="font-size:9px;color:var(--m);margin-top:3px" id="nst-${n.id}">Aguarda...</div>`;
+    el.onclick = () => validateNode(n.id);
+    grid.appendChild(el);
+  });
+
+  renderQuiz('quiz-s3', [
+    {q:"Quantas cópias da blockchain existem (aproximadamente)?",opts:["1 cópia central","Centenas","15.000-20.000 nodes públicos","Apenas os miners"],a:2},
+    {q:"Qual a principal função de um node Bitcoin?",opts:["Minerar novos blocos","Validar todas as transações e manter cópia da blockchain","Guardar as chaves privadas","Gerir o mempool central"],a:1},
+    {q:"Um pruned node é menos seguro que um full node?",opts:["Sim, pois não tem todos os dados","Não, valida igualmente toda a blockchain","Sim, não pode verificar transações antigas","Depende da versão do Bitcoin Core"],a:1},
+  ], () => { $('quiz-s3-next').style.display = 'block'; });
+}
+
+window.validateNode = async function(id) {
+  const el = $(`ni-${id}`); const st = $(`nst-${id}`);
+  if(!el || G.data.nodesValidated.has(id)) return;
+  el.className = 'node-item validating';
+  if(st) st.textContent = 'A validar...';
+  await sleep(800 + Math.random()*600);
+  el.className = 'node-item valid';
+  if(st) { st.textContent = '✅ Válido'; st.style.color='var(--gn)'; }
+  G.data.nodesValidated.add(id);
+  addXP(5);
+  const statusEl = $('node-status');
+  if(statusEl) statusEl.textContent = `${G.data.nodesValidated.size}/6 nodes validaram o bloco`;
+  if(G.data.nodesValidated.size === 6) {
+    const res = $('node-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--gn)">
+        🌐 <strong>Consenso alcançado!</strong> Todos os 6 nodes concordam que o bloco é válido. Em ~12 segundos, este bloco foi propagado para os 15.000+ nodes da rede Bitcoin worldwide.
+      </div>`;
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 4: UTXO
+// ══════════════════════════════════════════════════════════════════
+function s4() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🪙</span> Etapa 5 — UTXO: A Nota de Banco do Bitcoin</div>
+    <div class="card-body">
+      <strong style="color:var(--o)">UTXO = Unspent Transaction Output</strong> (saída de transação não gasta).<br><br>
+      No Bitcoin não existem "saldos" como num banco. O teu "saldo" é a soma de todos os UTXOs que as tuas chaves privadas controlam. É exactamente como notas físicas na tua carteira.
+    </div>
+    <div class="highlight">
+      💡 <strong>Analogia:</strong> Imagina que tens na carteira: uma nota de €50, uma de €20 e uma de €5. O teu "saldo" é €75. Se quiseres pagar €30, tens de usar a nota de €50 e receber €20 de troco. Os UTXOs funcionam exactamente assim — não podes "partir" um UTXO, tens de o gastar inteiro e receber troco.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:8px">Propriedades de um UTXO:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">📋 TXID — ID da transação de origem</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">🔢 Vout — índice do output na tx</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">💰 Valor — em satoshis</div>
+        <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 10px">🔐 Script — condição para gastar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Jogo UTXO: Coin Control</div>
+    <div class="card-body" style="margin-bottom:12px">
+      Tens estes UTXOs na carteira. Selecciona os necessários para pagar <strong style="color:var(--o)">0.15 BTC</strong> com o menor troco possível:
+    </div>
+    <div id="utxo-wallet" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <div style="background:#050505;border:1px solid var(--bd);border-radius:9px;padding:10px 12px;font-size:11px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--m)">Seleccionado:</span><span id="utxo-sel-val" style="color:var(--o);font-weight:700">0.00000000 BTC</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--m)">A enviar:</span><span style="color:var(--gn)">0.15000000 BTC</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--m)">Troco estimado:</span><span id="utxo-change-val" style="color:var(--bl);font-weight:700">—</span>
+      </div>
+    </div>
+    <button class="btn" id="utxo-send-btn" onclick="sendUtxo()" disabled>Construir Transação</button>
+    <div id="utxo-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s4"></div>
+    <div id="quiz-s4-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const utxos = [
+    {id:'u0',btc:0.05,label:'UTXO A',txid:'a1b2c3...'},
+    {id:'u1',btc:0.08,label:'UTXO B',txid:'d4e5f6...'},
+    {id:'u2',btc:0.12,label:'UTXO C',txid:'g7h8i9...'},
+    {id:'u3',btc:0.20,label:'UTXO D',txid:'j1k2l3...'},
+    {id:'u4',btc:0.03,label:'UTXO E',txid:'m4n5o6...'},
+  ];
+  G.data.utxos = utxos;
+  G.data.utxoSel = new Set();
+  const wallet = $('utxo-wallet');
+  utxos.forEach(u => {
+    const el = document.createElement('div');
+    el.className = 'utxo-box';
+    el.id = `ub-${u.id}`;
+    el.innerHTML = `<div style="font-size:20px">🪙</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${u.label}</div><div style="font-size:10px;color:var(--m);font-family:monospace">${u.txid}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:800;color:var(--o)">${u.btc.toFixed(8)}</div><div style="font-size:9px;color:var(--m)">BTC</div></div>`;
+    el.onclick = () => toggleUtxo(u.id, u.btc);
+    wallet.appendChild(el);
+  });
+
+  renderQuiz('quiz-s4', [
+    {q:"O que é um UTXO?",opts:["Um tipo de transação Lightning","Uma saída de transação não gasta — 'nota de banco' do Bitcoin","Um endereço Bitcoin especial","A chave pública da carteira"],a:1},
+    {q:"O que é 'Coin Control' (controlo de UTXOs)?",opts:["Controlar o preço do Bitcoin","Escolher manualmente quais UTXOs usar como inputs","Gerir a carteira hardware","Definir o fee rate"],a:1},
+    {q:"Podes 'partir' um UTXO ao metade?",opts:["Sim, com SegWit","Não — um UTXO é gasto inteiro, o troco vem como novo UTXO","Sim, se tiveres carteira multisig","Apenas com Lightning"],a:1},
+  ], () => { $('quiz-s4-next').style.display = 'block'; });
+}
+
+window.toggleUtxo = function(id, btc) {
+  const sel = G.data.utxoSel;
+  const el = $(`ub-${id}`);
+  if(sel.has(id)) {sel.delete(id);el.className='utxo-box';} 
+  else {sel.add(id);el.className='utxo-box selected';}
+  const total = [...sel].reduce((s,id)=>s+G.data.utxos.find(u=>u.id===id).btc,0);
+  const sv = $('utxo-sel-val'); if(sv) sv.textContent = total.toFixed(8)+' BTC';
+  const cv = $('utxo-change-val');
+  if(total > 0.15) {
+    const change = total - 0.15 - 0.0001;
+    if(cv) cv.textContent = (change>0?change:0).toFixed(8)+' BTC';
+  } else {
+    if(cv) cv.textContent = total>=0.15?'0.00000000 BTC':'Insuficiente';
+  }
+  const btn = $('utxo-send-btn'); if(btn) btn.disabled = total < 0.15;
+};
+
+window.sendUtxo = function() {
+  const sel = G.data.utxoSel;
+  const total = [...sel].reduce((s,id)=>s+G.data.utxos.find(u=>u.id===id).btc,0);
+  const change = +(total - 0.15 - 0.0001).toFixed(8);
+  sel.forEach(id => {const el=$(`ub-${id}`);if(el)el.className='utxo-box spent';});
+  const res = $('utxo-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px">
+      <div style="color:var(--gn);font-weight:700;margin-bottom:6px">✅ Transação Construída!</div>
+      <div>Inputs gastos: <strong>${sel.size} UTXO(s)</strong> totalizando ${total.toFixed(8)} BTC</div>
+      <div>Output principal: <strong>0.15000000 BTC</strong> → destinatário</div>
+      ${change>0?`<div>Output troco: <strong style="color:var(--bl)">${change} BTC</strong> → de volta para a tua carteira</div>`:''}
+      <div>Fee: <strong style="color:var(--o)">0.00010000 BTC</strong> → miner</div>
+    </div>`;
+    addXP(20);
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 5: CONFIRMAÇÕES
+// ══════════════════════════════════════════════════════════════════
+function s5() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">✅</span> Etapa 6 — 6 Confirmações: A Regra de Ouro</div>
+    <div class="card-body">
+      Quando a tua transação é incluída num bloco, tem <strong style="color:var(--o)">1 confirmação</strong>. Cada bloco subsequente adiciona mais uma confirmação. A regra standard da indústria é aguardar <strong style="color:var(--o)">6 confirmações</strong> (~1 hora) para considerar uma transação irreversível.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:11px;color:var(--m2);margin-bottom:8px;font-weight:700">Nível de segurança por número de confirmações:</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${[['0','Mempool','🏊 Pendente — pode ser substituída','var(--m)'],['1','~10 min','⚠ Baixa segurança — apenas para valores pequenos','var(--yl)'],['2-3','~20-30 min','🟠 Segurança moderada — pequenas compras','var(--o)'],['6','~1 hora','✅ Standard da indústria — seguro para maioria dos casos','var(--gn)'],['100+','~16 horas','🔒 Máxima segurança — mineração (coinbase)','var(--bl)']].map(([n,t,d,col])=>`
+          <div style="background:#080808;border:1px solid var(--bd);border-radius:7px;padding:8px 12px;display:grid;grid-template-columns:40px 80px 1fr;gap:8px;align-items:center">
+            <div style="font-size:14px;font-weight:800;color:${col};font-family:monospace">${n}</div>
+            <div style="font-size:10px;color:var(--m)">${t}</div>
+            <div style="font-size:10px;color:var(--m2)">${d}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="highlight">
+      🔗 <strong>Porquê 6 confirmações?</strong> Para reverter uma transação com 6 confirmações, um atacante precisaria de refazer 6 blocos consecutivos mais rápido que toda a rede honesta. Com o hashrate actual (~895 EH/s), isto seria astronomicamente dispendioso — requerendo mais de 50% de todo o hashrate mundial.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula as 6 Confirmações</div>
+    <div class="card-body" style="margin-bottom:12px">A tua transação foi incluída no bloco #880001. Aguarda as confirmações:</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px" id="conf-blocks">
+      ${[...Array(6)].map((_,i)=>`<div class="confirm-block" id="cb-${i}"><div style="font-size:18px">⬜</div><div style="font-size:9px;color:var(--m);margin-top:4px">${i===0?'Bloco TX':'Bloco '+(i+1)}</div><div style="font-size:10px;font-weight:700;margin-top:2px" id="cbs-${i}">—</div></div>`).join('')}
+    </div>
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:700" id="conf-status">A aguardar confirmações...</div>
+      <div style="font-size:11px;color:var(--m);margin-top:4px" id="conf-sub">Cada bloco demora ~10 minutos</div>
+    </div>
+    <button class="btn" id="conf-btn" onclick="startConfirmations()" style="width:100%">⏩ Simular Confirmações (acelerado)</button>
+    <div id="conf-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s5"></div>
+    <div id="quiz-s5-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  renderQuiz('quiz-s5', [
+    {q:"Porquê esperar 6 confirmações para transações de alto valor?",opts:["É um requisito do Bitcoin Core","Torna a reversão computacionalmente proibitiva","Para pagar menos fees","É o limite do mempool"],a:1},
+    {q:"O que significa uma transação com 0 confirmações?",opts:["A transação falhou","Ainda está no mempool — não está na blockchain","Foi confirmada instantaneamente","Tem fee zero"],a:1},
+    {q:"Quanto tempo demoram 6 confirmações em média?",opts:["6 minutos","10 minutos","~1 hora (6 x 10 min)","6 horas"],a:2},
+  ], () => { $('quiz-s5-next').style.display = 'block'; });
+}
+
+window.startConfirmations = async function() {
+  const btn = $('conf-btn'); if(btn) btn.disabled=true;
+  const statusEl = $('conf-status'), subEl = $('conf-sub');
+  const blockHashes = [randHex(64),randHex(64),randHex(64),randHex(64),randHex(64),randHex(64)];
+  for(let i=0;i<6;i++){
+    await sleep(700);
+    const cb = $(`cb-${i}`);
+    if(cb) {
+      cb.className = i === 5 ? 'confirm-block confirmed' : 'confirm-block confirmed';
+      cb.innerHTML = `<div style="font-size:18px">🟩</div><div style="font-size:9px;color:var(--gn);margin-top:4px">${i===0?'Bloco TX':'Bloco '+(i+1)}</div><div style="font-size:9px;font-family:monospace;color:var(--m);margin-top:2px" id="cbs-${i}">${blockHashes[i].slice(0,8)}...</div>`;
+    }
+    if(statusEl) statusEl.textContent = `${i+1} Confirmação${i>0?'s':''} ✅`;
+    if(subEl) subEl.textContent = i<5?`${5-i} confirmação(ões) em falta...`:'6 confirmações alcançadas!';
+    addXP(5);
+  }
+  const res = $('conf-result');
+  if(res) {
+    res.style.display='block';
+    res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px;color:var(--gn)">
+      🔒 <strong>Transação consolidada com 6 confirmações!</strong> Esta transação está agora gravada permanentemente na blockchain Bitcoin e é considerada irreversível pela grande maioria da indústria. Bem-vindo à imutabilidade.
+    </div>`;
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 6: ENDEREÇOS
+// ══════════════════════════════════════════════════════════════════
+function s6() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">📬</span> Etapa 7 — Tipos de Endereços Bitcoin</div>
+    <div class="card-body">
+      Um endereço Bitcoin é derivado da tua chave pública através de funções criptográficas. Existem vários formatos — cada um com diferentes características de privacidade, eficiência e compatibilidade.
+    </div>
+    <div style="font-size:11px;color:var(--m);margin:10px 0 6px;font-weight:700">Clica em cada tipo para saber mais:</div>
+    <div id="addr-list"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">⚡</span> Lightning Network</div>
+    <div class="card-body">
+      A <strong style="color:var(--o)">Lightning Network</strong> é uma segunda camada construída sobre o Bitcoin. Em vez de registar cada pagamento na blockchain, os utilizadores abrem um canal de pagamento entre si.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0">
+      <div style="background:#080808;border:1px solid rgba(234,179,8,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--yl);margin-bottom:6px">⚡ Lightning Address</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.6">
+          Formato: <span style="font-family:monospace;color:var(--t)">utilizador@dominio.com</span><br>
+          Ex: <span style="font-family:monospace;color:var(--yl)">jonathan@bitcoinacademyclub.com</span><br><br>
+          ✅ Fácil de memorizar<br>
+          ✅ Pagamentos instantâneos<br>
+          ✅ Sem endereço on-chain visível<br>
+          ⚠ Requer servidor LNURL
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">🧾 BOLT11 Invoice</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.6">
+          Formato: <span style="font-family:monospace;color:var(--t)">lnbc...</span><br><br>
+          ✅ Standard Lightning<br>
+          ✅ Contém valor e descrição<br>
+          ✅ Expira ao fim de X horas<br>
+          ⚠ Único uso por invoice
+        </div>
+      </div>
+    </div>
+    <div class="highlight">
+      🛤 <strong>Derivação HD (BIP32/44/84):</strong> Uma única seed phrase gera uma árvore hierárquica infinita de endereços. O caminho <code style="font-family:monospace;color:var(--o)">m/84'/0'/0'/0/0</code> gera o primeiro endereço SegWit nativo. Nunca reutilizes endereços — cada recepção deve usar um endereço novo para proteger a tua privacidade.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s6"></div>
+    <div id="quiz-s6-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const addrTypes = [
+    {prefix:'1',name:'P2PKH — Legacy',color:'var(--m)','desc':'O formato original do Bitcoin (2009). Começa sempre por "1". Funciona em todo o lado mas as transações são maiores (mais fee). Menos privacidade. Evitar para uso diário.','example':'1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf...','fee':'Alto'},
+    {prefix:'3',name:'P2SH — SegWit Compatível',color:'var(--bl)','desc':'Permite SegWit de forma compatível com wallets antigas. Começa por "3". Bom equilíbrio entre compatibilidade e eficiência. Também usado para multisig.','example':'3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy','fee':'Médio'},
+    {prefix:'bc1q',name:'P2WPKH — Native SegWit (Bech32)',color:'var(--gn)','desc':'O formato SegWit nativo. Começa por "bc1q". Transações ~40% mais baratas que Legacy. Recomendado para uso diário em 2025. Máxima eficiência on-chain.','example':'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh','fee':'Baixo ✅'},
+    {prefix:'bc1p',name:'P2TR — Taproot (Bech32m)',color:'var(--pu)','desc':'O formato mais moderno. Começa por "bc1p". Máxima privacidade (txs multisig parecem iguais a txs normais), scripts mais eficientes, base do Lightning futuro.','example':'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq...','fee':'Baixo ✅✅'},
+  ];
+
+  G.data.selectedAddr = null;
+  const list = $('addr-list');
+  addrTypes.forEach((a,i) => {
+    const el = document.createElement('div');
+    el.className = 'addr-type';
+    el.id = `at-${i}`;
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span class="addr-prefix" style="background:${a.color}18;color:${a.color}">${a.prefix}</span>
+      <span style="font-size:12px;font-weight:700">${a.name}</span>
+      <span class="tag" style="background:${a.fee.includes('Alto')?'rgba(239,68,68,.1)':a.fee.includes('Médio')?'rgba(234,179,8,.1)':'rgba(34,197,94,.1)';};color:${a.fee.includes('Alto')?'var(--rd)':a.fee.includes('Médio')?'var(--yl)':'var(--gn)'}">${a.fee}</span>
+    </div>
+    <div style="font-size:10px;color:var(--m);display:none" id="ad-desc-${i}">${a.desc}<br><span style="font-family:monospace;color:${a.color};font-size:9px;word-break:break-all">${a.example}</span></div>`;
+    el.onclick = () => {
+      document.querySelectorAll('.addr-type').forEach((x,j) => {
+        x.className='addr-type';
+        const d = $(`ad-desc-${j}`); if(d) d.style.display='none';
+      });
+      el.className='addr-type active';
+      const desc = $(`ad-desc-${i}`); if(desc) desc.style.display='block';
+      addXP(5);
+    };
+    list.appendChild(el);
+  });
+
+  renderQuiz('quiz-s6', [
+    {q:"Qual o formato de endereço Bitcoin recomendado para uso diário em 2025?",opts:["Legacy (começa por 1)","P2SH (começa por 3)","Native SegWit (bc1q)","Qualquer um é igual"],a:2},
+    {q:"Uma seed phrase gera quantos endereços Bitcoin?",opts:["1 fixo","Máximo 100","Infinitos — árvore HD derivada deterministicamente","Depende da carteira"],a:2},
+    {q:"Por que não deves reutilizar endereços Bitcoin?",opts:["Técnicamente impossível","Aumenta os fees","Reduz privacidade — expõe o historial de todas as transações","Não há problema nenhum"],a:2},
+  ], () => { $('quiz-s6-next').style.display = 'block'; });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 7: CARTEIRAS
+// ══════════════════════════════════════════════════════════════════
+function s7() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">🔐</span> Etapa 8 — Tipos de Carteira Bitcoin</div>
+    <div class="card-body">
+      Uma "carteira" Bitcoin não guarda Bitcoin — guarda <strong style="color:var(--o)">chaves privadas</strong>. O Bitcoin existe sempre na blockchain; a carteira é o que te permite assinar transações.
+    </div>
+    <div class="highlight" style="background:rgba(239,68,68,.06);border-left-color:var(--rd)">
+      ⚠ <strong>Regra Fundamental BAC:</strong> Para Bitcoin, usa EXCLUSIVAMENTE software e hardware open source auditado. Sem código aberto, não tens como verificar o que realmente acontece com as tuas chaves privadas.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Selecciona a Carteira Correcta</div>
+    <div class="card-body" style="margin-bottom:12px">Clica na carteira mais adequada para cada cenário. Descobre o porquê de cada escolha:</div>
+    <div id="wallet-list"></div>
+    <div id="wallet-feedback" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s7"></div>
+    <div id="quiz-s7-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const wallets = [
+    {icon:'⚡',name:'Blue Wallet',type:'Software — Hot Wallet',open:true,good:true,desc:'Open source, suporte Lightning e on-chain. Para valores pequenos e pagamentos diários. Não uses para guardar poupanças.'},
+    {icon:'🐦',name:'Sparrow Wallet',type:'Software — Desktop',open:true,good:true,desc:'Melhor carteira desktop Bitcoin-only. Full UTXO control, Coin Join integrado, Tor, conexão ao teu próprio node. Open source auditado.'},
+    {icon:'❄️',name:'Coldcard Mk4',type:'Hardware — Airgap',open:true,good:true,desc:'Gold standard. Bitcoin-only. Nunca conecta por USB a computadores. PSBTs via NFC/SD. Secure element. Referência máxima de segurança.'},
+    {icon:'🌱',name:'SeedSigner',type:'Hardware — DIY Airgap',open:true,good:true,desc:'Open source total. Raspberry Pi Zero. Stateless (não guarda a seed). Airgap via QR code. Podes construir o teu próprio.'},
+    {icon:'📱',name:'Ledger Nano X',type:'Hardware — USB/Bluetooth',open:false,good:false,desc:'EVITAR. Firmware proprietário. Ligação obrigatória por USB ou Bluetooth durante assinatura. 2023: implementou "Ledger Recover" que fragmenta e envia a tua seed para servidores externos.'},
+    {icon:'🔌',name:'Trezor Safe 3',type:'Hardware — USB',open:true,good:false,desc:'Open source mas EVITAR para Bitcoin sério. Requer ligação USB ao computador durante assinatura — superfície de ataque. Não é airgap.'},
+  ];
+
+  const list = $('wallet-list');
+  wallets.forEach((w,i) => {
+    const el = document.createElement('div');
+    el.className = `wallet-card ${w.good?'':'danger-w'}`;
+    el.id = `wc-${i}`;
+    el.innerHTML = `
+      <div style="font-size:26px;flex-shrink:0">${w.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:700">${w.name}</span>
+          <span class="tag ${w.open?'tag-green':'tag-red'}">${w.open?'Open Source':'Closed Source'}</span>
+          ${w.good?'<span class="tag tag-green">✅ Recomendado</span>':'<span class="tag tag-red">⛔ Evitar</span>'}
+        </div>
+        <div style="font-size:10px;color:var(--m)">${w.type}</div>
+        <div style="font-size:11px;color:var(--m2);margin-top:5px;display:none" id="wd-${i}">${w.desc}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      const desc = $(`wd-${i}`);
+      const showing = desc?.style.display !== 'none';
+      if(desc) desc.style.display = showing ? 'none' : 'block';
+      addXP(5);
+    };
+    list.appendChild(el);
+  });
+
+  renderQuiz('quiz-s7', [
+    {q:"Porquê usar APENAS software/hardware open source para Bitcoin?",opts:["É mais barato","Podes verificar que o código não tem backdoors ou comportamentos maliciosos","O desempenho é melhor","É exigido pela rede Bitcoin"],a:1},
+    {q:"Qual o principal problema do Ledger Nano X?",opts:["É muito caro","Firmware proprietário + Ledger Recover envia seed para servidores","Não suporta Bitcoin","Não tem ecrã"],a:1},
+    {q:"Uma hot wallet é recomendada para guardar as tuas poupanças em Bitcoin?",opts:["Sim, é conveniente","Não — hot wallets (ligadas à internet) são apenas para valores pequenos e uso diário","Só se tiveres senha forte","Depende do sistema operativo"],a:1},
+  ], () => { $('quiz-s7-next').style.display = 'block'; });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 8: ASSINATURAS CRIPTOGRÁFICAS (Cold Wallets)
+// ══════════════════════════════════════════════════════════════════
+function s8() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">✍</span> Etapa 9 — Assinaturas Criptográficas (Airgap)</div>
+    <div class="card-body">
+      Jonathan Costa — CEO da Bitcoin Academy Club — chama às cold wallets <strong style="color:var(--o)">"Assinaturas Criptográficas"</strong> porque é isso que elas fazem: assinar transações offline, sem nunca expor as chaves privadas a dispositivos conectados.
+    </div>
+    <div class="highlight" style="background:rgba(232,82,10,.06)">
+      ✍ <strong>O que é uma Assinatura Criptográfica?</strong><br>
+      Quando "assinamos" uma transação Bitcoin, usamos a nossa chave privada para criar uma prova matemática de que autorizamos o gasto de um UTXO específico. Esta prova (assinatura) pode ser verificada por qualquer node sem revelar a chave privada. É matematicamente impossível forjar.
+    </div>
+    <div style="margin:12px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--o);margin-bottom:8px">Airgap = Zero Conectividade Electrónica durante a Assinatura</div>
+      <div style="background:#050505;border:1px solid var(--bd);border-radius:10px;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">💻<br><span style="font-size:9px;color:var(--bl)">Computador<br>(online)</span></div>
+          <div style="font-size:10px;color:var(--m)">PSBT unsigned<br>↓↓ QR / SD ↓↓</div>
+          <div style="background:rgba(232,82,10,.1);border:1px solid rgba(232,82,10,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">✍<br><span style="font-size:9px;color:var(--o)">Coldcard/Seed<br>(offline)</span></div>
+          <div style="font-size:10px;color:var(--m)">PSBT signed<br>↑↑ QR / SD ↑↑</div>
+          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:8px 10px;text-align:center;min-width:80px">📡<br><span style="font-size:9px;color:var(--gn)">Rede Bitcoin<br>(broadcast)</span></div>
+        </div>
+        <div style="font-size:10px;color:var(--m2);line-height:1.7">
+          Mesmo que o computador esteja <strong style="color:var(--rd)">completamente comprometido com malware</strong>, o atacante NUNCA pode roubar as chaves privadas — porque elas nunca saem do dispositivo airgap. O único risco seria o atacante ter acesso físico ao dispositivo.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🎮</span> Simula o Fluxo PSBT Airgap</div>
+    <div class="card-body" style="margin-bottom:12px">Clica em cada passo para executar o fluxo completo de assinatura airgap:</div>
+    <div id="psbt-steps"></div>
+    <div id="psbt-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz</div>
+    <div id="quiz-s8"></div>
+    <div id="quiz-s8-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">Próxima Etapa →</button>
+    </div>
+  </div>
+  `;
+
+  const steps = [
+    {icon:'💻',title:'Sparrow cria PSBT não assinada',desc:'A Sparrow Wallet constrói a transação (inputs, outputs, fee) mas não pode assinar — não tem as chaves privadas. Exporta como PSBT (Partially Signed Bitcoin Transaction).'},
+    {icon:'📱',title:'Exportar via QR animado ou SD Card',desc:'A PSBT é convertida para um QR code animado (ou copiada para SD Card). O computador mostra o QR. O dispositivo airgap NUNCA toca no computador.'},
+    {icon:'✍',title:'Coldcard / SeedSigner lê o QR offline',desc:'O dispositivo airgap lê o QR com a câmara (completamente offline). Mostra no ecrã: endereço de destino, valor, fee. O utilizador verifica SEMPRE no ecrã do dispositivo.'},
+    {icon:'🔐',title:'Assina com aprovação física',desc:'Após verificação, o utilizador aprova fisicamente no dispositivo. A assinatura criptográfica é criada com a chave privada — que NUNCA saiu do dispositivo.'},
+    {icon:'📤',title:'Exportar PSBT assinada (QR/SD)',desc:'A PSBT assinada é exportada de volta via QR animado ou SD Card para o computador. O computador recebe a transação completa e assinada.'},
+    {icon:'📡',title:'Sparrow transmite para a rede',desc:'A Sparrow importa a PSBT assinada e transmite para a rede Bitcoin. A transação chega ao mempool e será incluída num bloco. Feito — sem nunca expor as chaves privadas!'},
+  ];
+
+  G.data.psbtStep = 0;
+  const stepsEl = $('psbt-steps');
+  steps.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = `p2p-step ${i===0?'active-step':''}`;
+    el.id = `ps-step-${i}`;
+    el.innerHTML = `<div class="step-num ${i===0?'active':''}" id="ps-num-${i}">${i+1}</div><div><div style="font-size:12px;font-weight:700;margin-bottom:3px">${s.icon} ${s.title}</div><div style="font-size:11px;color:var(--m);display:${i===0?'block':'none'}" id="ps-desc-${i}">${s.desc}</div></div>`;
+    stepsEl.appendChild(el);
+  });
+
+  const advBtn = document.createElement('button');
+  advBtn.className = 'btn';
+  advBtn.style.cssText = 'width:100%;margin-top:12px';
+  advBtn.textContent = '▶ Executar Passo 1';
+  advBtn.onclick = advancePsbt;
+  stepsEl.parentNode.insertBefore(advBtn, $('psbt-result'));
+  G.data.psbtAdvBtn = advBtn;
+
+  renderQuiz('quiz-s8', [
+    {q:"O que é PSBT (Partially Signed Bitcoin Transaction)?",opts:["Uma transação Lightning","Uma transação construída mas ainda não assinada — para usar com hardware airgap","Uma transação com fee parcial","Um tipo especial de UTXO"],a:1},
+    {q:"Porquê o Trezor e Ledger não são verdadeiramente airgap?",opts:["Porque são caros","Requerem ligação USB ou Bluetooth ao computador durante a assinatura","Porque não suportam Bitcoin","O firmware não é seguro"],a:1},
+    {q:"O que deves SEMPRE verificar no ecrã do dispositivo airgap antes de assinar?",opts:["O saldo total da carteira","O endereço de destino, o valor e a fee da transação","A data e hora","O número de confirmações"],a:1},
+  ], () => { $('quiz-s8-next').style.display = 'block'; });
+}
+
+let psbtStepCurrent = 0;
+window.advancePsbt = async function() {
+  const steps = 6;
+  if(psbtStepCurrent >= steps) return;
+  const btn = G.data.psbtAdvBtn;
+  if(btn) { btn.disabled=true; btn.textContent='⏳ A executar...'; }
+  await sleep(600);
+  const stepEl = $(`ps-step-${psbtStepCurrent}`);
+  const numEl = $(`ps-num-${psbtStepCurrent}`);
+  const descEl = $(`ps-desc-${psbtStepCurrent}`);
+  if(stepEl) stepEl.className='p2p-step done-step';
+  if(numEl) { numEl.className='step-num done'; numEl.textContent='✓'; }
+  if(descEl) descEl.style.display='block';
+  addXP(10);
+  psbtStepCurrent++;
+  if(psbtStepCurrent < steps) {
+    const next = $(`ps-step-${psbtStepCurrent}`);
+    const nextNum = $(`ps-num-${psbtStepCurrent}`);
+    if(next) next.className='p2p-step active-step';
+    if(nextNum) { nextNum.className='step-num active'; }
+    if(btn) { btn.disabled=false; btn.textContent=`▶ Executar Passo ${psbtStepCurrent+1}`; }
+  } else {
+    if(btn) { btn.disabled=true; btn.textContent='✅ Fluxo Completo!'; btn.style.background='rgba(34,197,94,.15)'; btn.style.color='var(--gn)'; btn.style.border='1px solid var(--gn)'; }
+    const res = $('psbt-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:12px;font-size:11px;color:var(--gn)">
+        🔒 <strong>Fluxo airgap completo!</strong> A transação foi assinada com a Coldcard/SeedSigner completamente offline e transmitida pela Sparrow. As tuas chaves privadas nunca saíram do dispositivo airgap. Esta é a soberania máxima no Bitcoin.
+      </div>`;
+    }
+  }
+};
+psbtStepCurrent = 0;
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 9: SPARROW / BLUE WALLET
+// ══════════════════════════════════════════════════════════════════
+function s9() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="card slide">
+    <div class="card-title"><span style="font-size:22px">💼</span> Etapa 10 — Sparrow Wallet & Blue Wallet</div>
+    <div class="card-body">
+      Chegou a hora de usares as ferramentas reais. A <strong style="color:var(--o)">Sparrow Wallet</strong> é a carteira desktop Bitcoin-only mais completa. A <strong style="color:var(--bl)">Blue Wallet</strong> é a melhor opção mobile para Lightning + on-chain.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🐦</span> Simulador Sparrow Wallet</div>
+    <div class="card-body" style="margin-bottom:10px">Simula receber e enviar uma transação na Sparrow:</div>
+    <div class="sparrow-ui">
+      <div class="sparrow-tab">
+        <button class="sparrow-tab-btn active" id="stb-recv" onclick="sparrowTab('recv',this)">Receber</button>
+        <button class="sparrow-tab-btn" id="stb-send" onclick="sparrowTab('send',this)">Enviar</button>
+        <button class="sparrow-tab-btn" id="stb-txs" onclick="sparrowTab('txs',this)">Transações</button>
+        <button class="sparrow-tab-btn" id="stb-utxo" onclick="sparrowTab('utxo',this)">UTXOs</button>
+      </div>
+      <div class="sparrow-body" id="sparrow-body">
+      </div>
+    </div>
+    <div id="sparrow-done" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:20px">📱</span> Blue Wallet — Lightning & On-Chain</div>
+    <div class="card-body" style="margin-bottom:10px">
+      A Blue Wallet suporta Lightning e Bitcoin on-chain no mesmo lugar. Para receber via Lightning, geras uma invoice BOLT11.
+    </div>
+    <div style="background:#080808;border:1px solid var(--bd);border-radius:10px;padding:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--o);margin-bottom:6px">📲 Receber Lightning</div>
+          <div style="font-size:10px;color:var(--m);line-height:1.7">
+            1. Abre Blue Wallet<br>
+            2. Selecciona carteira Lightning<br>
+            3. Toca em "Receber"<br>
+            4. Define o valor (opcional)<br>
+            5. Partilha o QR code / invoice<br>
+            6. Recebido em segundos ⚡
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--bl);margin-bottom:6px">📲 Enviar Lightning</div>
+          <div style="font-size:10px;color:var(--m);line-height:1.7">
+            1. Toca em "Enviar"<br>
+            2. Lê QR code da invoice<br>
+            3. Confirma valor e destino<br>
+            4. Toca em "Pagar"<br>
+            5. Confirmação instantânea ⚡<br>
+            6. Fee: fracção de satoshi
+          </div>
+        </div>
+      </div>
+      <div class="highlight" style="margin-top:10px">
+        🔗 <strong>Blue Wallet open source:</strong> <span style="font-family:monospace;font-size:10px;color:var(--o)">github.com/BlueWallet/BlueWallet</span> — auditável, sem custódia, código verificável.
+      </div>
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.3s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Final antes do Ouro</div>
+    <div id="quiz-s9"></div>
+    <div id="quiz-s9-next" style="display:none;margin-top:10px;text-align:right">
+      <button class="btn" onclick="completeStage()">🥇 Etapa OURO →</button>
+    </div>
+  </div>
+  `;
+
+  sparrowTab('recv', $('stb-recv'));
+
+  renderQuiz('quiz-s9', [
+    {q:"O que diferencia a Sparrow Wallet de outras carteiras?",opts:["É a mais rápida","Suporte completo a UTXO control, Coin Join, Tor e node próprio","Tem interface mobile","Suporta altcoins"],a:1},
+    {q:"Para que serve a label (etiqueta) de um UTXO na Sparrow?",opts:["Mudar o endereço","Identificar a origem do UTXO para melhor coin control e privacidade","Definir o fee","Confirmar a transação"],a:1},
+  ], () => { $('quiz-s9-next').style.display = 'block'; });
+}
+
+window.sparrowTab = function(tab, btn) {
+  document.querySelectorAll('.sparrow-tab-btn').forEach(b => b.className='sparrow-tab-btn');
+  if(btn) btn.className='sparrow-tab-btn active';
+  const body = $('sparrow-body');
+  if(!body) return;
+  if(tab==='recv') {
+    body.innerHTML=`<div style="text-align:center">
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px">Endereço de recepção (bc1q... — Native SegWit)</div>
+      <div style="background:#050505;border:1px solid var(--bd);border-radius:8px;padding:14px;display:inline-block;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:repeat(8,16px);gap:2px">
+          ${[...Array(64)].map((_,i)=>`<div style="width:16px;height:16px;background:${Math.random()>.5?'var(--t)':'var(--bg)'}"></div>`).join('')}
+        </div>
+      </div>
+      <div style="font-family:monospace;font-size:10px;color:var(--o);word-break:break-all;max-width:300px;margin:0 auto 8px">bc1q7cy8k2u9pq5n3m4w1xz9v6ertf8ghj2lk...</div>
+      <div style="font-size:10px;color:var(--m)">Cada recepção usa um endereço novo — privacidade garantida</div>
+      <div style="margin-top:10px"><button class="btn" onclick="simulateReceive()" id="recv-btn">Simular Recepção de 0.05 BTC</button></div>
+      <div id="recv-result" style="margin-top:8px"></div>
+    </div>`;
+  } else if(tab==='send') {
+    body.innerHTML=`<div>
+      <div style="font-size:11px;color:var(--m);margin-bottom:8px">Enviar Bitcoin</div>
+      <div style="margin-bottom:8px"><div style="font-size:10px;color:var(--m);margin-bottom:3px">Endereço de destino</div>
+      <input type="text" placeholder="bc1q... ou 1... ou 3..." style="width:100%;font-size:11px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--m);margin-bottom:3px">Valor (BTC)</div><input type="number" placeholder="0.01000000" step="0.001"></div>
+        <div><div style="font-size:10px;color:var(--m);margin-bottom:3px">Fee (sat/vB)</div><input type="number" placeholder="12" min="1" max="100"></div>
+      </div>
+      <div style="font-size:10px;color:var(--m);margin-bottom:8px">⚠ A Sparrow irá gerar uma PSBT para assinares com o teu dispositivo airgap</div>
+      <button class="btn" onclick="simulateSend()">Criar PSBT para Assinar</button>
+      <div id="send-result" style="margin-top:8px"></div>
+    </div>`;
+  } else if(tab==='txs') {
+    const txs=[{hash:randHex(8),type:'Recebido',amount:'+0.05000000',conf:'142',date:'15 Mar 2026'},{hash:randHex(8),type:'Enviado',amount:'-0.02000000',conf:'89',date:'10 Mar 2026'},{hash:randHex(8),type:'Recebido',amount:'+0.10000000',conf:'312',date:'1 Mar 2026'}];
+    body.innerHTML=`<div style="font-size:11px;color:var(--m);margin-bottom:8px">Historial de Transações</div>${txs.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#050505;border-radius:6px;margin-bottom:5px;font-size:11px"><div><div style="font-weight:600;color:${t.type==='Recebido'?'var(--gn)':'var(--rd)'}">${t.type}</div><div style="font-family:monospace;font-size:9px;color:var(--m)">${t.hash}... · ${t.conf} conf.</div></div><div style="text-align:right"><div style="font-weight:700;color:${t.type==='Recebido'?'var(--gn)':'var(--rd)'}">${t.amount} BTC</div><div style="font-size:9px;color:var(--m)">${t.date}</div></div></div>`).join('')}`;
+  } else if(tab==='utxo') {
+    body.innerHTML=`<div style="font-size:11px;color:var(--m);margin-bottom:8px">UTXOs disponíveis (Coin Control)</div>
+    <div style="font-size:10px;color:rgba(232,82,10,.7);margin-bottom:8px">💡 Na Sparrow, podes etiquetar cada UTXO para saber a sua origem — fundamental para privacidade</div>
+    ${[{amt:'0.05',label:'Recebido P2P Peach',date:'15 Mar'},{amt:'0.10',label:'Recebido P2P RoboSats',date:'1 Mar'},{amt:'0.03',label:'Troco tx anterior',date:'10 Mar'}].map(u=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#050505;border:1px solid var(--bd);border-radius:7px;padding:8px 10px;margin-bottom:5px;font-size:11px"><div><div style="font-weight:600;color:var(--o)">${u.amt} BTC</div><div style="font-size:9px;color:var(--gn)">${u.label}</div></div><div style="font-size:9px;color:var(--m)">${u.date}</div></div>`).join('')}`;
+  }
+};
+
+window.simulateReceive = function() {
+  const btn = $('recv-btn'); if(btn) btn.disabled=true;
+  setTimeout(() => {
+    const res = $('recv-result');
+    if(res) res.innerHTML=`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--gn)">✅ 0.05 BTC recebidos! Aguarda 6 confirmações para usar.</div>`;
+    addXP(15);
+  }, 1000);
+};
+
+window.simulateSend = function() {
+  const res = $('send-result');
+  setTimeout(() => {
+    if(res) res.innerHTML=`<div style="background:rgba(232,82,10,.08);border:1px solid rgba(232,82,10,.2);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--o)">✅ PSBT gerada! Exporta para a tua Assinatura Criptográfica (Coldcard/SeedSigner) para assinar.</div>`;
+    addXP(15);
+  }, 800);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STAGE 10: P2P GOLD 🥇
+// ══════════════════════════════════════════════════════════════════
+function s10() {
+  const c = $('stage-content');
+  c.innerHTML = `
+  <div class="gold-card slide">
+    <div class="gold-title">🥇 Etapa OURO — Compra P2P sem KYC</div>
+    <div style="font-size:12px;color:var(--m2);line-height:1.8;margin-top:8px">
+      Chegaste ao estágio final — e o mais importante para a soberania financeira completa. A única forma de adquirir Bitcoin sem ligar a tua identidade aos teus UTXOs é através de <strong style="color:var(--o)">trocas P2P (peer-to-peer)</strong>.
+    </div>
+    <div class="highlight" style="margin-top:10px">
+      🔑 <strong>Porquê P2P sem KYC?</strong><br>
+      Quando compras Bitcoin numa exchange (Binance, Coinbase...) com KYC, a tua identidade fica permanentemente ligada aos teus UTXOs nas bases de dados dessas empresas. Em caso de breach de dados (já aconteceu com a Binance, Ledger, FTX, Celsius...) ou controlo de capitais, os teus Bitcoin ficam associados à tua identidade para sempre. P2P sem KYC é privacidade financeira — não evasão fiscal.
+    </div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.1s">
+    <div class="card-title"><span style="font-size:20px">🍑</span> Simulador Peach Bitcoin</div>
+    <div class="card-body" style="margin-bottom:12px">
+      A <strong style="color:var(--o)">Peach Bitcoin</strong> é uma app mobile P2P focada na Europa. Sem KYC obrigatório, multisig escrow automático, suporta MB Way, SEPA, Revolut.
+    </div>
+    <div id="peach-steps">
+    </div>
+    <div id="peach-result" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <div class="card slide" style="animation-delay:.2s">
+    <div class="card-title"><span style="font-size:20px">🤖</span> RoboSats — Lightning P2P</div>
+    <div class="card-body" style="margin-bottom:10px">
+      O <strong style="color:var(--pu)">RoboSats</strong> é 100% Lightning, identidades robóticas descartáveis, acessível via Tor. Máxima privacidade P2P.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:#080808;border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--pu);margin-bottom:6px">✅ Vantagens RoboSats</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • Sem conta, sem email, sem KYC<br>
+          • Lightning = instantâneo<br>
+          • Robot identity descartável<br>
+          • Tor: anonimato máximo<br>
+          • Hold invoices = escrow automático
+        </div>
+      </div>
+      <div style="background:#080808;border:1px solid var(--bd);border-radius:8px;padding:10px 12px">
+        <div style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:6px">⚠ Considerações</div>
+        <div style="font-size:10px;color:var(--m);line-height:1.7">
+          • Mais técnico que Peach<br>
+          • Requer carteira Lightning<br>
+          • Liquidez pode ser menor<br>
+          • Volumes menores por trade<br>
+          • Ideal para quem já domina LN
+        </div>
+      </div>
+    </div>
+    <a href="https://robosats.com" target="_blank" class="btn-s" style="display:inline-block">→ robosats.com</a>
+  </div>
+
+  <div class="card slide" style="animation-delay:.3s">
+    <div class="card-title"><span style="font-size:18px">❓</span> Quiz Final 🥇</div>
+    <div id="quiz-s10"></div>
+    <div id="quiz-s10-next" style="display:none;margin-top:10px"></div>
+  </div>
+  `;
+
+  const peachSteps = [
+    {icon:'📲',title:'Descarrega Peach Bitcoin',desc:'Disponível na App Store e Google Play. Cria um nickname — não precisas de email, telefone ou identidade. O nickname é apenas para o sistema de reputação interno.'},
+    {icon:'🔍',title:'Navega nas ofertas de venda',desc:'Vês uma lista de vendedores com reputação (estrelas + número de trades). Filtra por método de pagamento (MB Way, SEPA, Revolut, etc.) e valor.'},
+    {icon:'🤝',title:'Aceita uma oferta',desc:'Seleccionas a oferta que queres. O Bitcoin do vendedor fica automaticamente bloqueado num escrow multisig 2-de-2. Ninguém pode mover os fundos sem ambas as partes concordarem.'},
+    {icon:'💶',title:'Efectua o pagamento fiat',desc:'Envias o valor acordado por MB Way/Revolut/SEPA para o vendedor. Guarda sempre o comprovativo de pagamento.'},
+    {icon:'✅',title:'Vendedor liberta os sats',desc:'Após confirmar o pagamento, o vendedor liberta o Bitcoin do escrow. Os sats chegam directamente à tua carteira — sem custódia, sem KYC.'},
+    {icon:'📬',title:'Bitcoin na tua Sparrow Wallet',desc:'Os sats chegam com 0 confirmações. Aguardas 6 confirmações (~1h) e tens Bitcoin soberano — sem ligação à tua identidade, directamente na tua cold wallet airgap.'},
+  ];
+
+  G.data.peachStep = -1;
+  const stepsEl = $('peach-steps');
+  peachSteps.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = 'p2p-step';
+    el.id = `peach-step-${i}`;
+    el.innerHTML = `<div class="step-num" id="peach-num-${i}">${i+1}</div><div><div style="font-size:12px;font-weight:700;margin-bottom:2px">${s.icon} ${s.title}</div><div style="font-size:11px;color:var(--m);display:none" id="peach-desc-${i}">${s.desc}</div></div>`;
+    stepsEl.appendChild(el);
+  });
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn';
+  nextBtn.style.cssText = 'width:100%;margin-top:12px';
+  nextBtn.textContent = '▶ Iniciar Compra P2P';
+  nextBtn.onclick = advancePeach;
+  stepsEl.parentNode.insertBefore(nextBtn, $('peach-result'));
+  G.data.peachNextBtn = nextBtn;
+  G.data.peachStepCurrent = 0;
+
+  renderQuiz('quiz-s10', [
+    {q:"O que é KYC e porquê evitar em exchanges centralizadas?",opts:["Know Your Crypto — para segurança","Know Your Customer — liga identidade a UTXOs em bases de dados de terceiros","Know Your Chain — protocolo Bitcoin","Não há problema com KYC em exchanges"],a:1},
+    {q:"O que é o escrow multisig na Peach Bitcoin?",opts:["Uma conta bancária da Peach","Bitcoin bloqueado numa transação 2-de-2 que requer aprovação de ambas as partes","Um tipo de taxa de câmbio","O sistema de reputação"],a:1},
+    {q:"Comprar Bitcoin P2P sem KYC é ilegal?",opts:["Sim, em todos os países","Não — é privacidade financeira legítima, como pagar em dinheiro","Só é legal em El Salvador","Depende do valor"],a:1},
+  ], () => {
+    const next = $('quiz-s10-next');
+    if(next) {
+      next.innerHTML=`<div class="stage-complete">
+        <div style="font-size:60px;margin-bottom:12px">🏆</div>
+        <div style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:8px">PARABÉNS, BITCOINER SOBERANO!</div>
+        <div style="font-size:13px;color:var(--m2);margin-bottom:16px;line-height:1.7">Completaste todos os estágios da Bitcoin Academy Club.<br>Agora conheces o Bitcoin de ponta a ponta — do bloco genesis à compra P2P soberana.</div>
+        <div id="final-score-block" style="margin:14px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+            <div style="background:rgba(232,82,10,.1);border:1px solid rgba(232,82,10,.25);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:24px;font-weight:900;color:var(--o);font-family:monospace" id="final-pts">—</div>
+              <div style="font-size:10px;color:var(--m);margin-top:3px">Pontos Totais</div>
+            </div>
+            <div style="background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:24px;font-weight:900;color:var(--gold);font-family:monospace" id="final-etapas">11/11</div>
+              <div style="font-size:10px;color:var(--m);margin-top:3px">Etapas Completas</div>
+            </div>
+            <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:10px;text-align:center">
+              <div style="font-size:24px;font-weight:900;color:var(--gn);font-family:monospace" id="final-rank">🥇</div>
+              <div style="font-size:10px;color:var(--m);margin-top:3px">Rank</div>
+            </div>
+          </div>
+          <!-- PARTILHAR -->
+          <div style="background:#080808;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:10px">📲 Partilha o teu resultado</div>
+            <div style="background:#050505;border:1px solid var(--bd);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--m2);line-height:1.7;margin-bottom:10px;font-family:monospace;white-space:pre-wrap" id="share-text"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onclick="shareTwitter()" style="background:#000;border:1px solid #333;border-radius:8px;padding:8px 14px;color:var(--t);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--o)'" onmouseout="this.style.borderColor='#333'">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.736l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Partilhar no X
+              </button>
+              <button onclick="copyResult()" id="copy-btn" style="background:transparent;border:1px solid var(--bd);border-radius:8px;padding:8px 14px;color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.borderColor='var(--o)';this.style.color='var(--o)'" onmouseout="this.style.borderColor='var(--bd)';this.style.color='var(--m)'">
+                📋 Copiar Resultado
+              </button>
+              <a href="https://www.instagram.com/bitcoin_academy_club/" target="_blank" style="background:linear-gradient(135deg,#E8520A,#FFD700);border:none;border-radius:8px;padding:8px 14px;color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:5px">
+                📸 @bitcoin_academy_club
+              </a>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-s" onclick="resetGame()">↺ Jogar Novamente</button>
+        </div>
+      </div>`;
+      completeStage();
+      setTimeout(showFinalScore, 500);
+    }
+  });
+}
+
+let peachStepC = 0;
+window.advancePeach = async function() {
+  const steps = 6;
+  const btn = G.data.peachNextBtn;
+  if(peachStepC >= steps) return;
+  if(btn) { btn.disabled=true; btn.textContent='⏳ Em progresso...'; }
+  await sleep(500);
+  const stepEl = $(`peach-step-${peachStepC}`);
+  const numEl = $(`peach-num-${peachStepC}`);
+  const descEl = $(`peach-desc-${peachStepC}`);
+  if(stepEl) stepEl.className='p2p-step done-step';
+  if(numEl) { numEl.className='step-num done'; numEl.textContent='✓'; }
+  if(descEl) descEl.style.display='block';
+  addXP(10);
+  peachStepC++;
+  if(peachStepC < steps) {
+    const next = $(`peach-step-${peachStepC}`);
+    const nextNum = $(`peach-num-${peachStepC}`);
+    if(next) next.className='p2p-step active-step';
+    if(nextNum) nextNum.className='step-num active';
+    if(btn) { btn.disabled=false; btn.textContent=`▶ Passo ${peachStepC+1}: ${['Descarregar App','Navegar Ofertas','Aceitar Oferta','Pagar Fiat','Aguardar Release','Confirmar'][peachStepC]}`; }
+  } else {
+    if(btn) { btn.disabled=true; btn.textContent='🍑 Compra P2P Completa!'; btn.style.background='rgba(232,82,10,.15)'; btn.style.color='var(--o)'; }
+    const res = $('peach-result');
+    if(res) {
+      res.style.display='block';
+      res.innerHTML=`<div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:9px;padding:12px;font-size:11px;color:var(--gold)">
+        🥇 <strong>Compra P2P sem KYC concluída!</strong> O teu Bitcoin chegou directamente à Sparrow Wallet — sem exchange, sem identidade ligada, sem custódia de terceiros. Isto é soberania financeira Bitcoin.
+      </div>`;
+    }
+  }
+};
+peachStepC = 0;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderStage(0);
+
+// ── SCORE & SHARE ─────────────────────────────────────────────────────────
+function getRank(score) {
+  if(score >= 1000) return '🥇 Bitcoiner Soberano';
+  if(score >= 700)  return '🥈 Hodler Experiente';
+  if(score >= 400)  return '🥉 Node Runner';
+  if(score >= 200)  return '⛏ Miner Iniciante';
+  return '🌱 Satoshi Curioso';
+}
+
+function buildShareText() {
+  const score = G.score || 0;
+  const rank = getRank(score);
+  const etapas = G.completed.size;
+  return `₿ BAC Game — Bitcoin Academy Club\n\nCompletei ${etapas}/11 etapas e aprendi Bitcoin do bloco genesis à compra P2P sem KYC!\n\n🏆 Pontuação: ${score.toLocaleString('pt-PT')} pts\n${rank}\n\n🎮 Joga em: bac-dashboard.org\n📸 @bitcoin_academy_club\n\n#Bitcoin #BAC #BitcoinAcademyClub #LearnBitcoin`;
+}
+
+function showFinalScore() {
+  const score = G.score || 0;
+  const rank = getRank(score);
+  const fp = $('final-pts'); if(fp) fp.textContent = score.toLocaleString('pt-PT');
+  const fr = $('final-rank'); if(fr) fr.textContent = rank;
+  const st = $('share-text'); if(st) st.textContent = buildShareText();
+}
+
+function shareTwitter() {
+  const text = encodeURIComponent(buildShareText());
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+function copyResult() {
+  const text = buildShareText();
+  navigator.clipboard?.writeText(text).then(() => {
+    const btn = $('copy-btn');
+    if(btn) { const orig = btn.textContent; btn.textContent = '✅ Copiado!'; btn.style.color='var(--gn)'; btn.style.borderColor='var(--gn)'; setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; btn.style.borderColor=''; },2000); }
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    const btn = $('copy-btn'); if(btn) { btn.textContent='✅ Copiado!'; setTimeout(()=>btn.textContent='📋 Copiar Resultado',2000); }
+  });
+}
+
+function resetGame() {
+  G.stage=0; G.xp=0; G.score=0; G.completed=new Set(); G.quizAnswered=new Set(); G.data={};
+  psbtStepCurrent=0; peachStepC=0;
+  const sd=$('score-display'); if(sd) sd.textContent='0';
+  updateStageDots(); renderStage(0);
+  // reset all stage dots
+  for(let i=0;i<=10;i++){
+    const dot=$(`sd-${i}`);const line=$(`sl-${i}`);
+    if(dot){ dot.className=i===10?'stage-dot gold':i===0?'stage-dot active':'stage-dot locked'; dot.innerHTML=['⛓','💸','🏊','🌐','🪙','✅','📬','🔐','✍','💼','🥇'][i]; }
+    if(line) line.className='stage-line';
+  }
+}
+
+// patch completeStage to show score on final
+const _origComplete = completeStage;
+// override s10 to call showFinalScore
+
+</script>
+</body>
+</html>
